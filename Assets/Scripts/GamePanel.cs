@@ -195,7 +195,7 @@ namespace Match3
             {
                 for (int j = 0; j < numCol; j++)
                 {
-                    FindMatchingTile(i, j, findinfo);
+                    FindMatchingTiles(i, j, findinfo);
                     // 매치가 확인 된 순간
                     if( findinfo.isMatch )
                          matches.Add(new MatchList(findinfo.matchlist)); // 리스트 복사해야할 듯.
@@ -216,6 +216,91 @@ namespace Match3
                     tiles[i, j].IsChecked = false;
         }
 
+        void FindHoriMatch(int row, int col, FindMatchInfo findinfo)
+        {
+            int cntMatch = 1;
+            bool bStopLeft = false;
+            bool bStopRight = false;
+            for (int i = 0; i < numCol-1; i++)
+            {
+                if(!bStopLeft && IsSameLeft(row, col, i))
+                {
+                    cntMatch++;
+                    findinfo.AddTilePosition(row, col - (i+1));
+                    tiles[row, col - (i+1)].IsChecked = true;
+                }
+                else
+                {
+                    if(bStopRight) return;
+                    bStopLeft = true;
+                }
+
+                if(!bStopRight && IsSameRight(row, col, i))
+                {
+                    cntMatch++;
+                    findinfo.AddTilePosition(row, col + (i+1));
+                    tiles[row, col + (i+1)].IsChecked = true;
+                }
+                else
+                {
+                    if(bStopLeft) return;
+                    bStopRight = true;
+                }
+
+                if(cntMatch >= 3)
+                    findinfo.isMatch = true;
+            }   
+        }
+
+        void FindVertMatch(int row, int col, FindMatchInfo findinfo)
+        {
+            int cntMatch = 1;
+            bool bStopUp = false;
+            bool bStopDown = false;
+            for (int i = 0; i < numRow; i++)
+            {
+                if(!bStopUp && IsSameUp(row, col, i))
+                {
+                    cntMatch++;
+                    findinfo.AddTilePosition(row - (i+1), col);
+                    tiles[row - (i+1), col].IsChecked = true;
+                }
+                else
+                {
+                    if(bStopDown) return;
+                    bStopUp = true;
+                }
+
+                if(!bStopDown && IsSameDown(row, col, i))
+                {
+                    cntMatch++;
+                    findinfo.AddTilePosition(row + (i+1), col);
+                    tiles[row + (i+1), col].IsChecked = true;
+                }
+                else
+                {
+                    if(bStopUp) return;
+                    bStopDown = true;
+                }
+
+                if(cntMatch >= 3)
+                    findinfo.isMatch = true;
+            }
+        }
+
+        private void FindMatchingTiles(int row, int col, FindMatchInfo findinfo)
+        {
+            Tile baseTile = tiles[row, col];
+            if (baseTile.IsChecked)
+                return;
+            else
+                baseTile.IsChecked = true;
+
+            findinfo.AddTilePosition(row, col);
+            
+            FindHoriMatch( row, col, findinfo);
+            FindVertMatch( row, col, findinfo);
+        }
 
         private bool FindMatchingTile(int row, int col, FindMatchInfo findinfo)
         {

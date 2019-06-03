@@ -43,6 +43,16 @@ namespace Tests
             Assert.IsTrue(gp.IsMatch3Tile(0, 2));
         }
 
+        [Test]
+        public void TestMatchTiles()
+        {
+            gp.CreateSpecificTilesforTest();
+            
+            Assert.That(gp.FindAllMatches(), Is.EqualTo(2));
+            gp.OutputTiles();
+            gp.OutputMatches();
+        }
+
         //// A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use
         //// `yield return null;` to skip a frame.
         //[UnityTest]

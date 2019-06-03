@@ -11,7 +11,7 @@ public class mbTestObject : MonoBehaviour
     void Start()
     {
         gp = new GamePanel(4, 5);
-        gp.CreateTiles();
+        gp.CreateSpecificTilesforTest();
         gp.OutputTiles();
 
         int numMatch = gp.FindAllMatches();

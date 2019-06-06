@@ -47,10 +47,29 @@ namespace Tests
         public void TestMatchTiles()
         {
             gp.CreateSpecificTilesforTest();
-            
             Assert.That(gp.FindAllMatches(), Is.EqualTo(2));
             gp.OutputTiles();
             gp.OutputMatches();
+        }
+
+        [Test]
+        public void DeleteMatchTiles()
+        {
+            gp.CreateSpecificTilesforTest();
+            gp.FindAllMatches();
+            gp.DeleteMatchTiles(); // 일련의 과정 중 하나
+            gp.OutputTiles();
+        }
+
+        [Test]
+        public void 빈자리에타일이동()
+        {
+            gp.CreateSpecificTilesforTest();
+            gp.FindAllMatches();
+            gp.DeleteMatchTiles(); // 일련의 과정 중 하나
+            gp.FillTilesToEmptyPlace();
+            Assert.That(gp.tiles[3,0].Type, Is.EqualTo(3));
+            gp.OutputTiles();
         }
 
         //// A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use

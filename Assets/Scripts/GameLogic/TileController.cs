@@ -23,7 +23,7 @@ public class TileController : MonoBehaviour
     void Start()
     {
         gp = new GamePanel(4, 5);
-        gp.CreateTilesWithResource(tilebuilder, tileRoot); // 반복된 루프 호출을 피하기 위함.
+        gp.CreateTilesWithoutMatch3(tilebuilder, tileRoot); // 반복된 루프 호출을 피하기 위함.
         InitTilePosition();
     }
 

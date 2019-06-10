@@ -43,10 +43,12 @@ namespace Match3
             numCol = height;
         }
 
-        public bool CreateTilesWithoutMatch3()
+        public void CreateTilesWithoutMatch3(TileBuilder builder, GameObject root)
         {
             // match 확인하는 카운팅
             int nCheckHori = 0;
+
+            // 랜덤을 여러 번 시행하지 않기 위해 리스트로 관리
             List<int> tmpTypeList = new List<int>(typeList);
             List<int> removeTypeList = new List<int>();
 
@@ -55,11 +57,9 @@ namespace Match3
                 nCheckHori = 0;
                 for(int j=0; j<numCol; j++)
                 {
-                    int index= Random.Range(0, tmpTypeList.Count);
-                    int type = tmpTypeList[index];
+                    int type = tmpTypeList[Random.Range(0, tmpTypeList.Count)];
                     if( nCheckHori >= 2)
                     {
-                        // 다시 생성하기
                         if(type == tiles[i,j-1].Type && tiles[i,j-1].Type == tiles[i,j-2].Type )
                         {
                             tmpTypeList.Remove(type);
@@ -70,7 +70,6 @@ namespace Match3
                     }
                     nCheckHori++;
 
-                    // 버그: 동시에 검사가 필요.
                     if(i >= 2)
                     {
                         if(type == tiles[i-1,j].Type && tiles[i-1,j].Type == tiles[i-2,j].Type )
@@ -80,19 +79,20 @@ namespace Match3
                             type = tmpTypeList[Random.Range(0, tmpTypeList.Count)];
                         }
                     }
-
-                    // 
-                    tiles[i,j] = new Tile(type);
-
+                    
                     if( removeTypeList.Count > 0 )
                     {
                         tmpTypeList.AddRange(removeTypeList);
                         removeTypeList.Clear();
                     }
+
+                    // 
+                    tiles[i,j] = new Tile(type);
+                    if(builder != null)
+                        builder.BindTileResource(tiles[i,j], root);
                 }
             }
 
-            return true;
         }
 
         public bool CreateTiles()
@@ -107,20 +107,6 @@ namespace Match3
             return true;
         }
 
-        public bool CreateTilesWithResource(TileBuilder builder, GameObject root)
-        {
-            int row = tiles.GetLength(0);
-            int col = tiles.GetLength(1);
-
-            for(int i=0; i<row; i++)
-                for(int j=0; j<col; j++)
-                {
-                    tiles[i,j] = new Tile(Random.Range(1, 5));
-                    builder.BindTileResource(tiles[i,j], root);
-                }
-
-            return true;
-        }
 
         public void OutputTiles()
         {

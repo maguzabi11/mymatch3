@@ -38,7 +38,8 @@ namespace Tests
         [Test]
         public void 타일생성_매치3_발생하지않게()
         {
-            Assert.That(gp.CreateTilesWithoutMatch3() == true);
+            gp.CreateTilesWithoutMatch3(null, null);
+            Assert.That(gp.FindAllMatches() == 0);
             gp.OutputTiles();
         }
 

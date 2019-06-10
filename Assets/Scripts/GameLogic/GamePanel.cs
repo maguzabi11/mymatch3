@@ -34,11 +34,65 @@ namespace Match3
 
         List<MatchList> matches = new List<MatchList>();
 
+        List<int> typeList = new List<int> {1,2,3,4};
+
         public GamePanel(int width, int height)
         {
             tiles = new Tile[width, height];
             numRow = width;
             numCol = height;
+        }
+
+        public bool CreateTilesWithoutMatch3()
+        {
+            // match 확인하는 카운팅
+            int nCheckHori = 0;
+            List<int> tmpTypeList = new List<int>(typeList);
+            List<int> removeTypeList = new List<int>();
+
+            for(int i=0; i<numRow; i++)
+            {   
+                nCheckHori = 0;
+                for(int j=0; j<numCol; j++)
+                {
+                    int index= Random.Range(0, tmpTypeList.Count);
+                    int type = tmpTypeList[index];
+                    if( nCheckHori >= 2)
+                    {
+                        // 다시 생성하기
+                        if(type == tiles[i,j-1].Type && tiles[i,j-1].Type == tiles[i,j-2].Type )
+                        {
+                            tmpTypeList.Remove(type);
+                            removeTypeList.Add(type);
+                            type = tmpTypeList[Random.Range(0, tmpTypeList.Count)];
+                            nCheckHori = 0;
+                        }
+                    }
+                    nCheckHori++;
+
+                    // 버그: 동시에 검사가 필요.
+                    if(i >= 2)
+                    {
+                        if(type == tiles[i-1,j].Type && tiles[i-1,j].Type == tiles[i-2,j].Type )
+                        {
+                            tmpTypeList.Remove(type);
+                            removeTypeList.Add(type);
+                            type = tmpTypeList[Random.Range(0, tmpTypeList.Count)];
+                        }
+                    }
+
+                    // 
+                    tiles[i,j] = new Tile(type);
+
+                    if( removeTypeList.Count > 0 )
+                    {
+                        tmpTypeList.AddRange(removeTypeList);
+                        removeTypeList.Clear();
+                    }
+                }
+            }
+
+            return true;
         }
 
         public bool CreateTiles()
@@ -48,7 +102,7 @@ namespace Match3
 
             for(int i=0; i<row; i++)
                 for(int j=0; j<col; j++)
-                    tiles[i,j] = new Tile(Random.Range(1, 4));
+                    tiles[i,j] = new Tile(Random.Range(1, 5));
 
             return true;
         }
@@ -61,7 +115,7 @@ namespace Match3
             for(int i=0; i<row; i++)
                 for(int j=0; j<col; j++)
                 {
-                    tiles[i,j] = new Tile(Random.Range(1, 4));
+                    tiles[i,j] = new Tile(Random.Range(1, 5));
                     builder.BindTileResource(tiles[i,j], root);
                 }
 

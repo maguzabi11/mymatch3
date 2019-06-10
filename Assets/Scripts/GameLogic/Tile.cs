@@ -38,7 +38,8 @@ public class Tile
 
     public void SetPosition(float x, float y)
     {
-        gameTile.transform.position = new Vector3(x,y);
+        if( gameTile != null)
+            gameTile.transform.position = new Vector3(x,y);
     }
 }
 

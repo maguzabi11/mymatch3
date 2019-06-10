@@ -442,6 +442,29 @@ namespace Match3
 
         }
 
+        public void SetTilePosition()
+        {
+            if(NumCol == 0 || NumRow == 0 )
+                return;
+            // 타일 배치
+            /*
+            - 홀수(3이상): i-iCenter;
+            - 짝수 개일 때 위치: i - iCenter + 0.5
+            */        
+            int iHoriCenter = NumCol / 2;
+            int iVertCenter = NumRow / 2;
+            float xOffset = (NumCol%2 == 0) ? 0.5f : 0f;
+            float yOffset = (NumRow%2 == 0) ? 0.5f : 0f;
+            for( int i=0; i<NumRow; i++)
+            {
+                for( int j=0; j<NumCol; j++)
+                {
+                    float y = i-iVertCenter + yOffset;
+                    float x = j-iHoriCenter + xOffset;
+                    tiles[i,j].SetPosition(x, y);
+                }
+            }
+        }
 
         // 3. 특정 타일 제거
         // - 매칭 타일

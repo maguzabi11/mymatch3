@@ -32,6 +32,9 @@ namespace Match3
         public int NumRow { get { return numRow; } }
         public int NumCol { get {return numCol; } }
 
+        public int GetLastIndexRow() { return numRow -1; }
+        public int GetLastIndexCol() { return numCol -1; }
+
         List<MatchList> matches = new List<MatchList>();
 
         List<int> typeList = new List<int> {1,2,3,4};
@@ -87,9 +90,10 @@ namespace Match3
                     }
 
                     // 
-                    tiles[i,j] = new Tile(type);
+                    var newTile = new Tile(type, new Point2D(i,j)); //
+                    tiles[i,j] = newTile;
                     if(builder != null)
-                        builder.BindTileResource(tiles[i,j], root);
+                        builder.BindTileResource(newTile, root);
                 }
             }
 
@@ -464,6 +468,15 @@ namespace Match3
                     tiles[i,j].SetPosition(x, y);
                 }
             }
+        }
+
+        public bool IsInRangeWidth(int i)
+        {
+            return (i>=0) && (i<numRow);
+        }
+        public bool IsInRangeHeigth(int i)
+        {
+            return (i>=0) && (i<numCol);
         }
 
         // 3. 특정 타일 제거

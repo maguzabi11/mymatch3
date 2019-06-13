@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Zenject;
 
 namespace Match3
 {
@@ -8,8 +9,10 @@ namespace Match3
 // 싱글턴이 적절
 public class TileBuilder
 {
-    Dictionary< int, GameObject> dicTiles = new Dictionary<int, GameObject>();
+    Dictionary< int, Object> dicTiles = new Dictionary<int, Object>();
 
+    [Inject]
+    TileInput.Factory _factory;
 
     public TileBuilder()
     {
@@ -18,23 +21,26 @@ public class TileBuilder
 
     public void InitTileResource()
     {
-        GameObject tile;
-        tile = Resources.Load<GameObject>("Food1");
+        Object tile;
+        tile = Resources.Load("Food1");
         dicTiles.Add(1, tile); // 추후 data로 분리, list<> scrptable object
-        tile = Resources.Load<GameObject>("Food2");
+        tile = Resources.Load("Food2");
         dicTiles.Add(2, tile);
-        tile = Resources.Load<GameObject>("Food3");
+        tile = Resources.Load("Food3");
         dicTiles.Add(3, tile);
-        tile = Resources.Load<GameObject>("Food4");
+        tile = Resources.Load("Food4");
         dicTiles.Add(4, tile);
     }
-
+   
     public GameObject CreateTileResource(int type)
     {
-        GameObject tile;
+        Object tile;
         bool bGet = dicTiles.TryGetValue(type, out tile);
         if( bGet )
-            return GameObject.Instantiate(tile); // pool 로 확장할 것.
+        {
+            var tileInput = _factory.Create(tile);
+            return tileInput.gameObject; // GameObject.Instantiate(tile); // pool 로 확장할 것.
+        }
         else
             return null;        
     }

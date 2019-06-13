@@ -1,13 +1,27 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using DG.Tweening;
+using Zenject;
 
 // using UniRx; // UniRx 도입 예정..
 
+namespace Match3
+{
+public class TileMovementSignal
+{
+    public TileMovement movement;
+}
+
+
 public class TileInput : MonoBehaviour
 {
+     public class Factory : PlaceholderFactory<UnityEngine.Object, TileInput>
+     {}
+
     Vector3 pos;
 
+    public Tile refTile;
 
     // Start is called before the first frame update
     void Start()
@@ -38,11 +52,14 @@ public class TileInput : MonoBehaviour
             if( diff.y > 0f )
             {
                 Debug.Log($"위로 이동");
-                // 메시지 한번만 보내고 
+                // 이동 중일 때는 입력을 막아야 할 것
+                //_controller.ReqMoveTile( refTile, TileMovement.Up);
             }
             else
             {
                 Debug.Log($"아래로 이동");
+                //_controller.ReqMoveTile( refTile, TileMovement.Down);
+                // MoveSelfTest(TileMovement.Down);
             }
         }
         else if( absX > absY )
@@ -60,9 +77,27 @@ public class TileInput : MonoBehaviour
         Debug.Log($"{gameObject.name}, {gameObject.GetHashCode()}");
     }
 
+    public void MoveSelfTest(TileMovement move)
+    {
+        // 인접 타일도 같이 움직여야 하므로
+        // 여기서는 다른 클래스에 요청하는 걸로.
+        // controller.ReqMoveTile(Tile refTile, move);
+
+        if(move == TileMovement.Down)
+            gameObject.transform. DOMoveY(-1f, 1f); // 코루틴 염두...
+        // else if(TileMovement.Up)
+        //     ;
+        // else if(TileMovement.Left)
+        //     ;
+        // else if(TileMovement.Right)
+        //     ;
+    }
+
     public void Update()
     {
 
     }
 
 }
+
+} // namespace

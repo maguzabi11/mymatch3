@@ -9,15 +9,17 @@ public class CommonInstaller : MonoInstaller
     {
         SignalBusInstaller.Install(Container);
         Container.DeclareSignal<TileMovementSignal>();
+
+        // 방법1
+        // Container.BindSignal<TileMovementSignal>()
+        //     .ToMethod<TileController>(x => x.OnTileMoveSignal).FromResolve();
         
         Container.BindFactory<UnityEngine.Object, TileInput, TileInput.Factory>()
-            .FromFactory<TileInputFactory>();
-            // .WhenInjectedInto<TileBuilder>()
-            // .NonLazy();
+            .FromFactory<TileInputFactory>()
+            .WhenInjectedInto<TileBuilder>();
 
         Container.Bind<TileBuilder>().AsSingle().NonLazy();
        
-        // TileController는 게임 오브젝트의 컴포넌트다.
         // var tilemanager = GameObject.Find("TileManager");
         // Container.Bind<TileController>().FromComponentOn(tilemanager);
     }

@@ -9,10 +9,20 @@ public class TileController : MonoBehaviour
     [Inject]
     TileBuilder tilebuilder;
 
+    [Inject]
+    SignalBus _signalBus;
+
     GamePanel gp;
 
     [SerializeField]
     GameObject tileRoot;
+
+    [Inject]
+    public void InitInject(SignalBus signalBus)
+    {
+        _signalBus = signalBus;
+        _signalBus.Subscribe<TileMovementSignal>(OnTileMoveSignal);
+    }
 
     void Awake()
     {
@@ -29,7 +39,18 @@ public class TileController : MonoBehaviour
     {
         gp = new GamePanel(4, 5);
         gp.CreateTilesWithoutMatch3(tilebuilder, tileRoot); // 반복된 루프 호출을 피하기 위함.
+        gp.OutputTiles();
         gp.SetTilePosition();
+    }
+
+    public void OnTileMoveSignal(TileMovementSignal signal)
+    {
+        ReqMoveTile( signal.tile, signal.movement);
+    }
+
+    void OnDestry()
+    {
+        _signalBus.Unsubscribe<TileMovementSignal>(OnTileMoveSignal);
     }
 
     // 작업 중
@@ -37,41 +58,9 @@ public class TileController : MonoBehaviour
     public void ReqMoveTile(Tile tile, TileMovement move)
     {
         var location = tile.GetLocation();
-        Tile adjTile = null;
-
-        bool bYoyo = !(gp.IsMatch3Tile(location.x, location.y));
-
-        // 방향에 따른 인접 타일과 이동할 위치 구하기, 이동 애니메이션을 설정하기
-        if(move == TileMovement.Up ) 
-        {
-            if(location.y > 0) 
-            {
-                adjTile = gp.tiles[location.x, location.y-1];
-                
-            }
-        }
-        else if(move == TileMovement.Down) 
-        {
-            if(location.y < gp.GetLastIndexRow()) 
-            {
-                adjTile = gp.tiles[location.x, location.y+1];
-                tile.MoveSwap(adjTile);
-            }
-        }
-        else if(move == TileMovement.Left)
-        {
-             if(location.x > 0 )
-             {
-                adjTile = gp.tiles[location.x-1, location.y];
-             }
-        }
-        else if(move == TileMovement.Right)
-        {
-            if(location.x < gp.GetLastIndexCol())
-            {
-                adjTile = gp.tiles[location.x+1, location.y];
-            }
-        }        
+        Tile adjTile = gp.GetAdjacentTile(tile, move);
+        if( adjTile != null )
+            gp.SwapTile(tile, adjTile);
     }
 
 }

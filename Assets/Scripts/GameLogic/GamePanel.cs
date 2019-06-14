@@ -463,11 +463,40 @@ namespace Match3
             {
                 for( int j=0; j<NumCol; j++)
                 {
-                    float y = i-iVertCenter + yOffset;
+                    float y = iVertCenter-i + yOffset;
                     float x = j-iHoriCenter + xOffset;
                     tiles[i,j].SetPosition(x, y);
                 }
             }
+        }
+
+        public Tile GetAdjacentTile(Tile tile, TileMovement move)
+        {
+            var location = tile.GetLocation();
+            Tile adjTile = null;
+            if(move == TileMovement.Up && location.x > 0) 
+                adjTile = tiles[location.x-1, location.y];
+            else if(move == TileMovement.Down && location.x < GetLastIndexRow() )
+                adjTile = tiles[location.x+1, location.y];
+            else if(move == TileMovement.Left && location.y > 0)
+                adjTile = tiles[location.x, location.y-1];
+            else if(move == TileMovement.Right && location.y < GetLastIndexCol())
+                adjTile = tiles[location.x, location.y+1];
+            return adjTile;
+        }
+
+        public void SwapTile(Tile src, Tile tile2 )
+        {
+            var pos1 = src.GetLocation();
+            bool bYoyo = !(IsMatch3Tile(pos1.x, pos1.y));
+
+            src.MoveSwap(tile2);
+            
+            var pos2 = tile2.GetLocation();
+            tiles[pos1.x,pos1.y] = tile2;
+            tiles[pos2.x,pos2.y] = src;
+            
+            src.SwapLocation(tile2);
         }
 
         public bool IsInRangeWidth(int i)

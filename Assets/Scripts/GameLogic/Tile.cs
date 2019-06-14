@@ -64,12 +64,24 @@ public class Tile
         return location;
     }
 
-    public void MoveSwap(Tile tile)
+    public void MoveSwap(Tile tile, bool bYoyo = false)
     {
         var vecTo = tile.gameTile.transform.position; // 참조 가능?
         var vecFrom = gameTile.transform.position;
-        gameTile.transform.DOMove(vecTo, 1);
-        tile.gameTile.transform.DOMove(vecFrom, 1);        
+        gameTile.transform.DOMove(new Vector3(vecTo.x, vecTo.y), 1);
+        tile.gameTile.transform.DOMove(new Vector3(vecFrom.x, vecFrom.y), 1)
+            .OnComplete( () => { TileInput.blockInput = false;});
+    }
+
+    public void SwapLocation(Tile tile)
+    {
+        var tmpLocation = tile.GetLocation();
+
+        Debug.LogFormat($"[{location.x},{location.y}]과 [{tmpLocation.x},{tmpLocation.y}] 교환");
+        // 로케이션 교환
+        
+        tile.SetLocation(location);
+        location = tmpLocation;
     }
 }
 

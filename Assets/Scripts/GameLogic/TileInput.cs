@@ -10,14 +10,26 @@ namespace Match3
 {
 public class TileMovementSignal
 {
+    public Tile tile;
     public TileMovement movement;
+
+    public TileMovementSignal(Tile tile, TileMovement move)
+    {
+        this.tile =tile;
+        movement = move;
+    }
 }
 
 
 public class TileInput : MonoBehaviour
 {
-     public class Factory : PlaceholderFactory<UnityEngine.Object, TileInput>
-     {}
+    public static bool blockInput;
+
+    public class Factory : PlaceholderFactory<UnityEngine.Object, TileInput>
+    {}
+
+    [Inject]
+    SignalBus _signalBus;
 
     Vector3 pos;
 
@@ -32,12 +44,15 @@ public class TileInput : MonoBehaviour
     void OnMouseDown()
     {
         pos = Input.mousePosition;
-        Debug.Log($"OnMouseDown {gameObject.name}, {gameObject.GetHashCode()}");
+        Debug.Log($"OnMouseDown [{refTile.GetLocation().x}, {refTile.GetLocation().y}] {gameObject.name}, {gameObject.GetHashCode()}");                
     }
 
     // test 이벤트 핸들러
     void OnMouseDrag()
     {
+        if( blockInput )
+            return;
+
         // 얼만큼을 움직임으로 인식하고 끊을 것인지 정할 것
         var diff = Input.mousePosition - pos;
 
@@ -48,27 +63,35 @@ public class TileInput : MonoBehaviour
         var absY = Mathf.Abs(diff.y);
         if( absX < absY )
         {
-            Debug.Log($"y쪽이 더 움직임 {diff.y}");
+            //Debug.Log($"y쪽이 더 움직임 {diff.y}");
             if( diff.y > 0f )
             {
                 Debug.Log($"위로 이동");
-                // 이동 중일 때는 입력을 막아야 할 것
-                //_controller.ReqMoveTile( refTile, TileMovement.Up);
+                _signalBus.Fire(new TileMovementSignal(refTile, TileMovement.Up));
+                blockInput = true;
             }
             else
             {
                 Debug.Log($"아래로 이동");
-                //_controller.ReqMoveTile( refTile, TileMovement.Down);
-                // MoveSelfTest(TileMovement.Down);
+                _signalBus.Fire(new TileMovementSignal(refTile, TileMovement.Down));
+                blockInput = true;
             }
         }
         else if( absX > absY )
         {    
-            Debug.Log($"x쪽이 더 움직임 {diff.x}");
+            //Debug.Log($"x쪽이 더 움직임 {diff.x}");
             if( diff.x > 0f )
+            {
                 Debug.Log($"오른쪽으로 이동");
+                _signalBus.Fire(new TileMovementSignal(refTile, TileMovement.Right));
+                blockInput = true;
+            }
             else
+            {
                 Debug.Log($"왼쪽으로 이동");
+                _signalBus.Fire(new TileMovementSignal(refTile, TileMovement.Left));
+                blockInput = true;
+            }
         }
     }
 
@@ -93,10 +116,6 @@ public class TileInput : MonoBehaviour
         //     ;
     }
 
-    public void Update()
-    {
-
-    }
 
 }
 

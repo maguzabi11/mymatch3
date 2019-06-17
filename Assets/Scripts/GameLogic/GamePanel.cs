@@ -470,6 +470,17 @@ namespace Match3
             }
         }
 
+        public bool TrySwapTile(Tile tile, TileMovement move)
+        {
+            bool bSwap = false;
+            Tile adjTile = GetAdjacentTile(tile, move);
+            if( adjTile != null ) 
+                bSwap = SwapTile(tile, adjTile);                
+
+            // 리턴 false: 인접 없는 경우, 매치가 발생되지 않는 경우
+            return bSwap;
+        }
+
         public Tile GetAdjacentTile(Tile tile, TileMovement move)
         {
             var location = tile.GetLocation();
@@ -485,18 +496,40 @@ namespace Match3
             return adjTile;
         }
 
-        public void SwapTile(Tile src, Tile tile2 )
+        Tile GetUpTile(Tile tile, int offset = 0)
         {
-            var pos1 = src.GetLocation();
-            bool bYoyo = !(IsMatch3Tile(pos1.x, pos1.y));
+            var location = tile.GetLocation();
+            return (location.x - offset > 0) ? tiles[location.x-(1+offset), location.y] : null;
+        }
 
-            src.MoveSwap(tile2);
+        public bool SwapTile(Tile src, Tile dst )
+        {
+            var srcPos = src.GetLocation();
+            var dstPos = dst.GetLocation();
+
+            // 둘이 바뀌었다고 가정하고 두 인접 타일에 대해 확인을 해야한다.
+            tiles[srcPos.x,srcPos.y] = dst;
+            tiles[dstPos.x,dstPos.y] = src;
+
+            bool isMatch = (IsMatch3Tile(srcPos.x, srcPos.y) || IsMatch3Tile(dstPos.x, dstPos.y));
+            //  위 함수 대신 매치 정보를 포함하는
+
+            src.MoveSwap(dst, !isMatch);
             
-            var pos2 = tile2.GetLocation();
-            tiles[pos1.x,pos1.y] = tile2;
-            tiles[pos2.x,pos2.y] = src;
-            
-            src.SwapLocation(tile2);
+            if( isMatch )
+            {
+                src.SwapLocation(dst);
+                // 필요한 경우 시그널 생성
+                Debug.LogFormat("매치!");
+                return true;
+            }
+            else
+            {
+                tiles[srcPos.x,srcPos.y] = src;
+                tiles[dstPos.x,dstPos.y] = dst;
+                Debug.LogFormat("교환하지 않음. yoyo 발생");
+                return false;
+            }            
         }
 
         public bool IsInRangeWidth(int i)

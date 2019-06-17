@@ -66,11 +66,33 @@ public class Tile
 
     public void MoveSwap(Tile tile, bool bYoyo = false)
     {
+        const float duration = 0.5f;
+
+        if( tile.gameTile == null || gameTile == null )
+            return;
+
         var vecTo = tile.gameTile.transform.position; // 참조 가능?
         var vecFrom = gameTile.transform.position;
-        gameTile.transform.DOMove(new Vector3(vecTo.x, vecTo.y), 1);
-        tile.gameTile.transform.DOMove(new Vector3(vecFrom.x, vecFrom.y), 1)
-            .OnComplete( () => { TileInput.blockInput = false;});
+
+        if( bYoyo == false)
+        {
+            gameTile.transform.DOMove(new Vector3(vecTo.x, vecTo.y), duration);
+
+            tile.gameTile.transform.DOMove(new Vector3(vecFrom.x, vecFrom.y), duration)
+                .OnComplete( () => {
+                        TileInput.blockInput = false;
+                        // 
+                    });
+        }
+        else
+        {
+            gameTile.transform.DOMove(new Vector3(vecTo.x, vecTo.y), duration)
+            .SetLoops(2, LoopType.Yoyo);
+
+            tile.gameTile.transform.DOMove(new Vector3(vecFrom.x, vecFrom.y), duration)
+                .OnComplete( () => { TileInput.blockInput = false;})
+                .SetLoops(2, LoopType.Yoyo);
+        }
     }
 
     public void SwapLocation(Tile tile)

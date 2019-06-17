@@ -27,14 +27,7 @@ namespace Tests
             Assert.AreEqual( gp.tiles.Length, 20 );
         }
 
-        [Test]
-        public void TestCreateTiles()
-        {
-            bool b = gp.CreateTiles();
-            Assert.That(b == true);
-            gp.OutputTiles();
-        }
-
+ 
         [Test]
         public void 타일생성_매치3_발생하지않게()
         {
@@ -44,7 +37,7 @@ namespace Tests
         }
 
         [Test]
-        public void TestMatchTile()
+        public void 매치발생확인()
         {
             gp.CreateSpecificTilesforTest();
             
@@ -78,6 +71,13 @@ namespace Tests
             gp.FillTilesToEmptyPlace();
             Assert.That(gp.tiles[3,0].Type, Is.EqualTo(3));
             gp.OutputTiles();
+        }
+
+        [Test]
+        public void 타일_스왑후에_매치발생확인()
+        {
+            gp.CreateSpecificTilesforTest();
+            Assert.That(gp.TrySwapTile(gp.tiles[1,1], TileMovement.Right), Is.True);
         }
 
         //// A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use

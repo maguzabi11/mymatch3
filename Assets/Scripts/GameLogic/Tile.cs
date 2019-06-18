@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 using DG.Tweening;
+using Object = UnityEngine.Object;
 
 namespace Match3
 {
@@ -28,8 +29,15 @@ public class Tile
     [Inject]
     GamePanel gp;
 
-    // public class Factory : PlaceholderFactory<Tile> // 현재 파라미터를 사용하면 에러가 나온다.
-    // {}
+    SignalBus _signalBus;
+
+    [Inject]
+    public void Constructor(SignalBus signalBus)
+    {
+        _signalBus = signalBus;
+        _signalBus.Subscribe<TileDeleteSignal>(OnDeleteSignal);
+    }
+  
 
     public class Factory : PlaceholderFactory<int, Point2D, Tile>
     {}
@@ -81,11 +89,11 @@ public class Tile
         if( bYoyo == false)
         {
             gameTile.transform.DOMove(new Vector3(vecTo.x, vecTo.y), duration);
-
             tile.gameTile.transform.DOMove(new Vector3(vecFrom.x, vecFrom.y), duration)
                 .OnComplete( () => {
                         TileInput.blockInput = false;
-                        // 
+                        Debug.Log("교환 애니 종료");
+                        gp.DeleteMatchTiles();
                     });
         }
         else
@@ -108,6 +116,23 @@ public class Tile
         
         tile.SetLocation(location);
         location = tmpLocation;
+    }
+
+    public void OnDeleteSignal(TileDeleteSignal signal)
+    {
+        if( this != signal.tile )
+            return;
+
+        gameTile.GetComponent<SpriteRenderer>().material.DOFade(0f, 1f)
+            .OnComplete( ()=> { 
+                Delete();
+            });
+    }
+
+    public void Delete()
+    {
+        gameTile.SetActive(false);
+        Object.Destroy(gameTile);
     }
 }
 

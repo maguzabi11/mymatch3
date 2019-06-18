@@ -42,6 +42,14 @@ namespace Match3
         [Inject]
         Tile.Factory _factory;
 
+        SignalBus _signalBus;
+
+        [Inject]
+        public void Constructor(SignalBus signalBus)
+        {
+            _signalBus = signalBus;
+        }
+
         public GamePanel()
         {}
 
@@ -414,6 +422,9 @@ namespace Match3
                 MatchList list = matches[i];
                 foreach(Point2D pos in list)
                 {
+                    var tile = tiles[pos.x, pos.y];
+                    _signalBus.Fire(new TileDeleteSignal(tile));
+
                     tiles[pos.x, pos.y] = null;
                 }
             }
@@ -526,6 +537,8 @@ namespace Match3
             
             if( isMatch )
             {
+                // 애니메이션 처리 전에 검사
+                int cntMatch = FindMatches( new Point2D[] {srcPos, dstPos} );
                 src.SwapLocation(dst);
                 // 필요한 경우 시그널 생성
                 Debug.LogFormat("매치!");

@@ -25,18 +25,22 @@ public class Tile
 
     Point2D location;
 
-    public Tile()
-    { IsChecked = false; }
+    [Inject]
+    GamePanel gp;
 
-    public Tile(int type) :this()
+    // public class Factory : PlaceholderFactory<Tile> // 현재 파라미터를 사용하면 에러가 나온다.
+    // {}
+
+    public class Factory : PlaceholderFactory<int, Point2D, Tile>
+    {}
+
+    public Tile(int type, Point2D point)
     {
+        IsChecked = false;
         this.type = type;
-    }
-
-    public Tile(int type, Point2D point) :this(type)
-    {
         location = point;
     }
+
 
     public void SetTileObject(GameObject gameobject, GameObject parent)
     {

@@ -12,16 +12,18 @@ public class TileController : MonoBehaviour
     [Inject]
     SignalBus _signalBus;
 
+    [Inject]
     GamePanel gp;
 
     [SerializeField]
     GameObject tileRoot;
 
     [Inject]
-    public void InitInject(SignalBus signalBus)
+    public void InitInject(SignalBus signalBus, GamePanel gamepanel)
     {
         _signalBus = signalBus;
         _signalBus.Subscribe<TileMovementSignal>(OnTileMoveSignal);
+        gp = gamepanel;
     }
 
     void Awake()
@@ -37,7 +39,7 @@ public class TileController : MonoBehaviour
 
     public void InitTiles()
     {
-        gp = new GamePanel(4, 5);
+        gp.CreatePanel(4, 5);
         gp.CreateTilesWithoutMatch3(tilebuilder, tileRoot); // 반복된 루프 호출을 피하기 위함.
         gp.OutputTiles();
         gp.SetTilePosition();

@@ -39,9 +39,20 @@ namespace Match3
 
         List<int> typeList = new List<int> {1,2,3,4};
 
+        [Inject]
+        Tile.Factory _factory;
+
+        public GamePanel()
+        {}
+
         public GamePanel(int width, int height)
         {
-            tiles = new Tile[width, height];
+            CreatePanel( width, height);
+        }
+
+        public void CreatePanel(int width, int height)
+        {
+            tiles = new Tile[width, height]; // 재할당
             numRow = width;
             numCol = height;
         }
@@ -90,25 +101,14 @@ namespace Match3
                     }
 
                     // 
-                    var newTile = new Tile(type, new Point2D(i,j)); //
+                    var newTile = _factory.Create(type, new Point2D(i,j));//
+                    // newTile = new Tile(type, new Point2D(i,j));
                     tiles[i,j] = newTile;
                     if(builder != null)
                         builder.BindTileResource(newTile, root);
                 }
             }
 
-        }
-
-        public bool CreateTiles()
-        {
-            int row = tiles.GetLength(0);
-            int col = tiles.GetLength(1);
-
-            for(int i=0; i<row; i++)
-                for(int j=0; j<col; j++)
-                    tiles[i,j] = new Tile(Random.Range(1, 5));
-
-            return true;
         }
 
 
@@ -216,7 +216,18 @@ namespace Match3
             }
         }
 
-        // 필요한 인터페이스
+        public int FindMatches(Point2D[] poslist)
+        {
+            ResetSearch();
+            FindMatchInfo findinfo = new FindMatchInfo();
+
+            for (int i = 0; i < poslist.Length; i++)
+                FindMatchingTiles(poslist[i].x, poslist[i].y, findinfo);
+
+            return matches.Count;
+        }
+
+
         // 매칭 타일 찾기
         // 1. 전체 검사
         // 2. 특정 위치에서 매칭 검사
@@ -226,17 +237,8 @@ namespace Match3
             FindMatchInfo findinfo = new FindMatchInfo();
 
             for (int i = 0; i < numRow; i++)
-            {
                 for (int j = 0; j < numCol; j++)
-                {
                     FindMatchingTiles(i, j, findinfo);
-                    // 매치가 확인 된 순간
-                    if( findinfo.isMatch )
-                         matches.Add(new MatchList(findinfo.matchlist)); // 리스트 복사해야할 듯.
-
-                    findinfo.Reset();
-                }
-            }
 
             return matches.Count;
         }
@@ -334,6 +336,12 @@ namespace Match3
             
             FindHoriMatch( row, col, findinfo);
             FindVertMatch( row, col, findinfo);
+
+            // 매치가 확인 된 순간
+            if( findinfo.isMatch )
+                    matches.Add(new MatchList(findinfo.matchlist)); // 리스트 복사해야할 듯.
+
+            findinfo.Reset();
         }
 
         private bool FindMatchingTile(int row, int col, FindMatchInfo findinfo)

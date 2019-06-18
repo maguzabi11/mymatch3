@@ -19,9 +19,8 @@ public class CommonInstaller : MonoInstaller
             .WhenInjectedInto<TileBuilder>();
 
         Container.Bind<TileBuilder>().AsSingle().NonLazy();
-       
-        // var tilemanager = GameObject.Find("TileManager");
-        // Container.Bind<TileController>().FromComponentOn(tilemanager);
+        Container.Bind<GamePanel>().AsSingle();
+        Container.BindFactory<int, Point2D, Tile, Tile.Factory>();
     }
 
 

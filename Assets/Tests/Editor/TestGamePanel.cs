@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
-
+using Zenject;
+using NUnit.Framework;
 using Match3;
 
 namespace Tests
 {
+    [TestFixture]
     // fixture 자동?
     public class TestGamePanel
     {
@@ -28,13 +29,13 @@ namespace Tests
         }
 
  
-        [Test]
-        public void 타일생성_매치3_발생하지않게()
-        {
-            gp.CreateTilesWithoutMatch3(null, null);
-            Assert.That(gp.FindAllMatches() == 0);
-            gp.OutputTiles();
-        }
+        //[Test]
+        //public void 타일생성_매치3_발생하지않게()
+        //{
+        //    gp.CreateTilesWithoutMatch3(null, null);
+        //    Assert.That(gp.FindAllMatches() == 0);
+        //    gp.OutputTiles();
+        //}
 
         [Test]
         public void 매치발생확인()

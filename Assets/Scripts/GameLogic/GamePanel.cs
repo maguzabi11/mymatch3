@@ -430,6 +430,11 @@ namespace Match3
             }
         }
 
+        private bool IsEmptyPlace(int x, int y)
+        {
+            return tiles[x, y] == null;
+        }
+
         public void FillTilesToEmptyPlace()
         {
             //1. 빈 자리로 이동 (밑으로 이동 규칙)
@@ -437,21 +442,21 @@ namespace Match3
             {
                 bool bCopy = false;
                 int iCopy = numRow-1;
-                for(int j=iCopy; j>=0; j--)
+                for(int j=iCopy; j>=0; j--) // 바닥에서 위로
                 {
                     if(bCopy)
                     {
-                        if( tiles[j,i] != null )
+                        if( !IsEmptyPlace(j, i) )
                         {
                             // 움직일 칸 수: iCopy - j
                             tiles[iCopy,i] = tiles[j,i];
-                            iCopy++;
                             tiles[j,i] = null;
+                            iCopy++;
                         }
                     }
                     else 
                     {
-                        if( tiles[j,i] == null )
+                        if( IsEmptyPlace(j, i) )
                         {
                             bCopy = true;
                             iCopy = j;

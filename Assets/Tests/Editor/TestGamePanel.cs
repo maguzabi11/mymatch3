@@ -11,15 +11,24 @@ namespace Tests
 {
     [TestFixture]
     // fixture 자동?
-    public class TestGamePanel
+    public class TestGamePanel : ZenjectUnitTestFixture
     {
+        [Inject]
         GamePanel gp;
 
         [SetUp]
-        public void Setup()
+        public void CommonInstall()
         {
+            SignalBusInstaller.Install(Container);
+            Container.DeclareSignal<TileMovementSignal>();
+            Container.DeclareSignal<TileDeleteSignal>();
+
             // Use the Assert class to test conditions
-            gp = new GamePanel(4, 5);
+            Container.Bind<GamePanel>().AsSingle();
+            Container.BindFactory<int, Point2D, Tile, Tile.Factory>();
+            Container.Inject(this);
+
+            Container.Resolve<GamePanel>().CreatePanel(4,5);
         }
 
         [Test]

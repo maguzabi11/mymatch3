@@ -8,6 +8,9 @@ public class UntitledUnitTest : ZenjectUnitTestFixture
     [SetUp]
     public void CommonInstall()
     {
+        SignalBusInstaller.Install(Container);
+        Container.DeclareSignal<TileMovementSignal>();
+        Container.DeclareSignal<TileDeleteSignal>();        
         Container.Bind<GamePanel>().AsSingle();
         Container.BindFactory<int, Point2D, Tile, Tile.Factory>();
         Container.Inject(this);

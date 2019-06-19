@@ -10,6 +10,7 @@ public class CommonInstaller : MonoInstaller
         SignalBusInstaller.Install(Container);
         Container.DeclareSignal<TileMovementSignal>();
         Container.DeclareSignal<TileDeleteSignal>();
+        Container.DeclareSignal<FillTileSignal>();
 
         // 방법1
         // Container.BindSignal<TileMovementSignal>()

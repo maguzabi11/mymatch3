@@ -126,6 +126,7 @@ public class Tile
         gameTile.GetComponent<SpriteRenderer>().material.DOFade(0f, 1f)
             .OnComplete( ()=> { 
                 Delete();
+                _signalBus.Fire(new FillTileSignal());
             });
     }
 

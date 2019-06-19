@@ -27,5 +27,8 @@ public class TileDeleteSignal
     }
 }
 
+public class FillTileSignal
+{}
+
 
 }

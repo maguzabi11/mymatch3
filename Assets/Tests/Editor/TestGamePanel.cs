@@ -20,10 +20,15 @@ namespace Tests
         public void CommonInstall()
         {
             SignalBusInstaller.Install(Container);
-            Container.DeclareSignal<TileMovementSignal>();
-            Container.DeclareSignal<TileDeleteSignal>();
+            Container.DeclareSignal<TileMovementSignal>().OptionalSubscriber();
+            Container.DeclareSignal<TileDeleteSignal>().OptionalSubscriber();  
+            Container.DeclareSignal<FillTileSignal>().OptionalSubscriber();
 
-            // Use the Assert class to test conditions
+            Container.BindFactory<UnityEngine.Object, TileInput, TileInput.Factory>()
+                .FromFactory<TileInputFactory>()
+                .WhenInjectedInto<TileBuilder>();
+                
+            Container.Bind<TileBuilder>().AsSingle().NonLazy(); 
             Container.Bind<GamePanel>().AsSingle();
             Container.BindFactory<int, Point2D, Tile, Tile.Factory>();
             Container.Inject(this);
@@ -36,15 +41,6 @@ namespace Tests
         {
             Assert.AreEqual( gp.tiles.Length, 20 );
         }
-
- 
-        //[Test]
-        //public void 타일생성_매치3_발생하지않게()
-        //{
-        //    gp.CreateTilesWithoutMatch3(null, null);
-        //    Assert.That(gp.FindAllMatches() == 0);
-        //    gp.OutputTiles();
-        //}
 
         [Test]
         public void 매치발생확인()
@@ -69,6 +65,15 @@ namespace Tests
             gp.CreateSpecificTilesforTest();
             gp.FindAllMatches();
             gp.DeleteMatchTiles(); // 일련의 과정 중 하나
+            gp.OutputTiles();
+        }
+
+        [Test]
+        public void 타일생성_매치3_발생하지않게()
+        {
+            gp.CreatePanel(4, 5);
+            gp.CreateTilesWithoutMatch3();
+            Assert.That(gp.FindAllMatches() == 0);
             gp.OutputTiles();
         }
 

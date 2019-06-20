@@ -29,6 +29,7 @@ public class TileController : MonoBehaviour
     void Awake()
     {
         tileRoot = gameObject;
+        tilebuilder.tileRoot = tileRoot;
     }
 
     // Start is called before the first frame update
@@ -40,7 +41,7 @@ public class TileController : MonoBehaviour
     public void InitTiles()
     {
         gp.CreatePanel(4, 5);
-        gp.CreateTilesWithoutMatch3(tilebuilder, tileRoot); // 반복된 루프 호출을 피하기 위함.
+        gp.CreateTilesWithoutMatch3(); // 반복된 루프 호출을 피하기 위함.
         gp.OutputTiles();
         gp.SetTilePosition();
     }

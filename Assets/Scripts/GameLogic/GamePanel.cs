@@ -40,6 +40,9 @@ namespace Match3
         List<int> typeList = new List<int> {1,2,3,4};
 
         [Inject]
+        TileBuilder _tilebuilder;
+
+        [Inject]
         Tile.Factory _factory;
 
         SignalBus _signalBus;
@@ -48,6 +51,7 @@ namespace Match3
         public void Constructor(SignalBus signalBus)
         {
             _signalBus = signalBus;
+            _signalBus.Subscribe<FillTileSignal>(OnFillTileSignal);
         }
 
         public GamePanel()
@@ -65,7 +69,7 @@ namespace Match3
             numCol = height;
         }
 
-        public void CreateTilesWithoutMatch3(TileBuilder builder, GameObject root)
+        public void CreateTilesWithoutMatch3()
         {
             // match 확인하는 카운팅
             int nCheckHori = 0;
@@ -80,9 +84,9 @@ namespace Match3
                 for(int j=0; j<numCol; j++)
                 {
                     int type = tmpTypeList[Random.Range(0, tmpTypeList.Count)];
-                    if( nCheckHori >= 2)
+                    if (nCheckHori >= 2)
                     {
-                        if(type == tiles[i,j-1].Type && tiles[i,j-1].Type == tiles[i,j-2].Type )
+                        if (type == tiles[i, j - 1].Type && tiles[i, j - 1].Type == tiles[i, j - 2].Type)
                         {
                             tmpTypeList.Remove(type);
                             removeTypeList.Add(type);
@@ -92,33 +96,36 @@ namespace Match3
                     }
                     nCheckHori++;
 
-                    if(i >= 2)
+                    if (i >= 2)
                     {
-                        if(type == tiles[i-1,j].Type && tiles[i-1,j].Type == tiles[i-2,j].Type )
+                        if (type == tiles[i - 1, j].Type && tiles[i - 1, j].Type == tiles[i - 2, j].Type)
                         {
                             tmpTypeList.Remove(type);
                             removeTypeList.Add(type);
                             type = tmpTypeList[Random.Range(0, tmpTypeList.Count)];
                         }
                     }
-                    
-                    if( removeTypeList.Count > 0 )
+
+                    if (removeTypeList.Count > 0)
                     {
                         tmpTypeList.AddRange(removeTypeList);
                         removeTypeList.Clear();
                     }
 
                     // 
-                    var newTile = _factory.Create(type, new Point2D(i,j));//
-                    // newTile = new Tile(type, new Point2D(i,j));
-                    tiles[i,j] = newTile;
-                    if(builder != null)
-                        builder.BindTileResource(newTile, root);
+                    CreateTile(i, j, type);
                 }
             }
 
         }
 
+        private void CreateTile(int i, int j, int type)
+        {
+            var newTile = _factory.Create(type, new Point2D(i, j));//
+            tiles[i, j] = newTile;
+            if (_tilebuilder != null)
+                _tilebuilder.BindTileResource(newTile);
+        }
 
         public void OutputTiles()
         {
@@ -432,9 +439,10 @@ namespace Match3
 
         private bool IsEmptyPlace(int x, int y)
         {
-            return tiles[x, y] == null;
+             return tiles[x, y] == null;
         }
 
+        // 이동 위치 계산 버그 있음. 
         public void FillTilesToEmptyPlace()
         {
             //1. 빈 자리로 이동 (밑으로 이동 규칙)
@@ -450,8 +458,10 @@ namespace Match3
                         {
                             // 움직일 칸 수: iCopy - j
                             tiles[iCopy,i] = tiles[j,i];
+                            tiles[iCopy,i].MoveTo(iCopy,i);
                             tiles[j,i] = null;
-                            iCopy++;
+
+                            iCopy--;
                         }
                     }
                     else 
@@ -463,32 +473,53 @@ namespace Match3
                         }
                     }
                 }
+
+                if( iCopy < numRow-1)
+                    CreateTileAndSetPosition(iCopy, i);
             }
-
-            //2. 새로운 빈 자리는 새로운 랜덤 타일로 채운다.
-
-
         }
+
+        private void CreateTileAndSetPosition(int nNew, int col)
+        {
+            // 남은 빈 자리 확인
+            Debug.LogFormat("{0}열 빈 자리 ", col);
+            int iHoriCenter = NumCol / 2;
+            int iVertCenter = NumRow / 2;
+            float xOffset = GetOffset(NumCol);
+            float yOffset = GetOffset(NumRow);
+            float startOffset = nNew + 1;
+            while (nNew >= 0)
+            {
+                CreateTile(nNew, col, typeList[Random.Range(0, typeList.Count)]);
+                float y = iVertCenter - nNew + yOffset;
+                float fromY = y + startOffset;
+                float x = col - iHoriCenter + xOffset;
+                tiles[nNew, col].SetPosition(x, fromY);
+                tiles[nNew, col].MoveTo(x, y);
+
+                Debug.LogFormat($"[{nNew},{col}]");
+                nNew--;
+            }
+        }
+
+        // 홀수, 짝수에 따라 배치 조정
+        Func<int, float> GetOffset = (v) => { return (v%2 == 0) ? 0.5f : 0f;};
 
         public void SetTilePosition()
         {
             if(NumCol == 0 || NumRow == 0 )
                 return;
-            // 타일 배치
-            /*
-            - 홀수(3이상): i-iCenter;
-            - 짝수 개일 때 위치: i - iCenter + 0.5
-            */        
+
             int iHoriCenter = NumCol / 2;
             int iVertCenter = NumRow / 2;
-            float xOffset = (NumCol%2 == 0) ? 0.5f : 0f;
-            float yOffset = (NumRow%2 == 0) ? 0.5f : 0f;
+            float xOffset = GetOffset(NumCol);
+            float yOffset = GetOffset(NumRow);
             for( int i=0; i<NumRow; i++)
             {
                 for( int j=0; j<NumCol; j++)
                 {
-                    float y = iVertCenter-i + yOffset;
                     float x = j-iHoriCenter + xOffset;
+                    float y = iVertCenter-i + yOffset;
                     tiles[i,j].SetPosition(x, y);
                 }
             }
@@ -581,6 +612,22 @@ namespace Match3
         // todo 
         // - tile pool 필요
 
+        ///
+        #region 시그널 처리 함수
+        bool isFillTileSignal = false;
+        public void OnFillTileSignal(FillTileSignal signal)
+        {
+            // 여러 번 들어와도 한번만 처리
+            if(isFillTileSignal)
+                return;
+
+            isFillTileSignal = true;
+            FillTilesToEmptyPlace();
+        }
+
+        
+
+        #endregion
     }
 
 }

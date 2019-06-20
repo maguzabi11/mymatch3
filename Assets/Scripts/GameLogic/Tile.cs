@@ -26,6 +26,9 @@ public class Tile
 
     Point2D location;
 
+    // 설정 값들은 데이터로
+    const float duration = 0.5f;
+
     [Inject]
     GamePanel gp;
 
@@ -53,7 +56,8 @@ public class Tile
     public void SetTileObject(GameObject gameobject, GameObject parent)
     {
         gameTile = gameobject;
-        gameTile.transform.parent = parent.transform;
+        if( parent != null)
+            gameTile.transform.parent = parent.transform;
 
         var tileInput = gameTile.GetComponent<TileInput>();
         if( tileInput != null )
@@ -76,10 +80,47 @@ public class Tile
         return location;
     }
 
+    public void MoveTo(int row, int col)
+    {
+        if( gameTile == null )
+            return;
+
+        // 이동할 양
+        var moveY = location.x - row; // 수직 이동
+        var moveX = location.y - col; // 수평 이동
+
+        var vecTo = gameTile.transform.position;
+        vecTo.x += moveX;
+        vecTo.y += moveY;
+
+        Debug.LogFormat("moveTo [{0}, {1}] -> [{2}, {3}]", 
+            location.x, location.y, row, col);
+
+        PlayMove(vecTo);
+        location.x = row;
+        location.y = col;
+    }
+
+    public void MoveTo(float x, float y)
+    {
+        if (gameTile == null)
+            return;
+
+        PlayMove(new Vector3(x,y));
+    }
+
+    private void PlayMove(Vector3 vecTo)
+    {
+        gameTile.transform.DOMove(vecTo, duration).SetEase(Ease.InCirc)
+            .OnComplete(() =>
+            {
+                //Debug.Log("떨어졌어요~");
+            });
+    }
+
     public void MoveSwap(Tile tile, bool bYoyo = false)
     {
-        const float duration = 0.5f;
-
+        
         if( tile.gameTile == null || gameTile == null )
             return;
 
@@ -126,7 +167,7 @@ public class Tile
         gameTile.GetComponent<SpriteRenderer>().material.DOFade(0f, 1f)
             .OnComplete( ()=> { 
                 Delete();
-                _signalBus.Fire(new FillTileSignal());
+                _signalBus.Fire(new FillTileSignal()); // 여러 타일에서 보낼 필요가 없음...
             });
     }
 

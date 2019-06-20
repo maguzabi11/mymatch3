@@ -14,6 +14,8 @@ public class TileBuilder
     [Inject]
     TileInput.Factory _factory;
 
+    public GameObject tileRoot;
+
     public TileBuilder()
     {
         InitTileResource(); // 로딩 시간이 걸릴 수 있음. 다른 곳에서 호출 권장.
@@ -45,9 +47,9 @@ public class TileBuilder
             return null;        
     }
 
-    public void BindTileResource(Tile tile, GameObject root)
+    public void BindTileResource(Tile tile)
     {
-        tile.SetTileObject( CreateTileResource(tile.Type), root );
+        tile.SetTileObject( CreateTileResource(tile.Type), tileRoot );
     }
 }
 

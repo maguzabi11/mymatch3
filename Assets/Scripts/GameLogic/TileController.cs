@@ -60,7 +60,11 @@ public class TileController : MonoBehaviour
     // 이름 변경 후보: TrySwapAdjacentTile
     public void ReqMoveTile(Tile tile, TileMovement move)
     {
-        gp.TrySwapTile(tile, move);
+        bool bRet = gp.TrySwapTile(tile, move);
+        if( !bRet )
+            TileInput.blockInput = false;
+        else
+            TileInput.blockInput = true;
     }
 
 }

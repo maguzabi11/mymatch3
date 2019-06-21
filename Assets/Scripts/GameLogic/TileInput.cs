@@ -57,13 +57,11 @@ public class TileInput : MonoBehaviour
             {
                 Debug.Log($"위로 이동");
                 _signalBus.Fire(new TileMovementSignal(refTile, TileMovement.Up));
-                blockInput = true;
             }
             else
             {
                 Debug.Log($"아래로 이동");
                 _signalBus.Fire(new TileMovementSignal(refTile, TileMovement.Down));
-                blockInput = true;
             }
         }
         else if( absX > absY )
@@ -73,13 +71,11 @@ public class TileInput : MonoBehaviour
             {
                 Debug.Log($"오른쪽으로 이동");
                 _signalBus.Fire(new TileMovementSignal(refTile, TileMovement.Right));
-                blockInput = true;
             }
             else
             {
                 Debug.Log($"왼쪽으로 이동");
                 _signalBus.Fire(new TileMovementSignal(refTile, TileMovement.Left));
-                blockInput = true;
             }
         }
     }

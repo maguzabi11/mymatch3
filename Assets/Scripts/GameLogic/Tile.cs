@@ -20,6 +20,24 @@ public class Tile
         get; set;
     }
 
+    int nfound;
+    public bool IsDuplicatedSearch
+    {
+        get {return nfound > 1;}
+    }
+
+    public void MarkSearch()
+    {
+        IsChecked = true;
+        nfound++;
+    }
+
+    public void ResetSearch()
+    {
+        IsChecked = false;
+        nfound = 0;        
+    }
+
     // - 그리드 상의 자신의 위치는 필요한가? 
     // - 참조할 수 있는 인접 타일 정보가 필요한가?
     GameObject gameTile;

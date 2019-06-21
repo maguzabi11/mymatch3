@@ -175,6 +175,27 @@ namespace Match3
             return (down < numRow && tiles[row, col].Type == tiles[down, col].Type);
         }
 
+        public Tile GetLeftTile(int row, int col, int offset)
+        {
+            int left = col - 1 - offset;
+            return (left >= 0) ? tiles[row, left] : null;
+        }
+        public Tile GetRightTile(int row, int col, int offset)
+        {
+            int right = col + 1 + offset;
+            return (right < numCol) ? tiles[row, right] : null;
+        }
+        public Tile GetUpTile(int row, int col, int offset)
+        {
+            int up = row - 1 - offset;
+            return (up >= 0) ? tiles[up, col] : null;
+        }
+        public Tile GetDownTile(int row, int col, int offset)
+        {
+            int down = row + 1 + offset;
+            return (down < numRow) ? tiles[down, col] : null;
+        }                        
+
         public bool IsMatch3Tile(int row, int col)
         {
             // 가로 검사
@@ -280,8 +301,80 @@ namespace Match3
             matches.Clear();
             for (int i = 0; i < numRow; i++)
                 for (int j = 0; j < numCol; j++)
-                    tiles[i, j].IsChecked = false;
+                    tiles[i, j].ResetSearch();
         }
+
+        delegate bool compareTile(int row, int col, int offset); // isSame~
+        delegate  Tile getNeighborTile(int row, int col, int offset);
+        
+
+        void FindMatch(int row, int col, FindMatchInfo findinfo, FindDirection dir)
+        {
+            int num = 0;
+            compareTile compareTile1;
+            compareTile compareTile2;
+            getNeighborTile getTile1;
+            getNeighborTile getTile2;            
+            if( dir == FindDirection.Horizon)
+            {
+                num = numCol-1;
+                compareTile1 = IsSameLeft;
+                compareTile2 = IsSameRight;
+                getTile1 = GetLeftTile;
+                getTile2 = GetRightTile;
+            }
+            else
+            {
+                num = numRow-1;
+                compareTile1 = IsSameUp;
+                compareTile2 = IsSameDown;
+                getTile1 = GetUpTile;
+                getTile2 = GetDownTile;
+            }
+
+            List<Tile> matchlist = new List<Tile>();
+            bool bStopLeft = false;
+            bool bStopRight = false;
+            for (int i = 0; i < num; i++)
+            {
+                if(!bStopLeft && compareTile1(row, col, i))
+                {
+                    var tile = getTile1(row, col, i);
+                    matchlist.Add(tile);
+                    tile.MarkSearch();
+                }
+                else
+                {
+                    if(bStopRight)
+                        break;
+                    bStopLeft = true;
+                }
+
+                if(!bStopRight && compareTile2(row, col, i))
+                {
+                    var tile = getTile2(row, col, i);
+                    matchlist.Add(tile);
+                    tile.MarkSearch();
+                }
+                else
+                {
+                    if(bStopLeft)
+                        break;
+                    bStopRight = true;
+                }
+            }   
+            
+            if(matchlist.Count >= 2)
+            {
+                findinfo.isMatch = true;
+                foreach( var tile in matchlist)
+                {
+                    if( tile.IsDuplicatedSearch == false )
+                        findinfo.AddTilePosition(tile.GetLocation());
+                }
+            }
+            matchlist.Clear();
+        }        
 
         void FindHoriMatch(int row, int col, FindMatchInfo findinfo)
         {
@@ -293,8 +386,12 @@ namespace Match3
                 if(!bStopLeft && IsSameLeft(row, col, i))
                 {
                     var left = col - (i+1);
-                    matchlist.Add(new Point2D(row, left));
-                    tiles[row, left].IsChecked = true;
+                    if( !tiles[row, left].IsChecked )
+                    {
+                        // tiles[row, left].location == new Point2D(row, left)
+                        matchlist.Add(new Point2D(row, left));
+                        tiles[row, left].MarkSearch();
+                    }
                 }
                 else
                 {
@@ -306,8 +403,11 @@ namespace Match3
                 if(!bStopRight && IsSameRight(row, col, i))
                 {
                     var right = col + (i+1);
-                    matchlist.Add(new Point2D(row, right));
-                    tiles[row, right].IsChecked = true;
+                    if( !tiles[row, right].IsChecked )
+                    {
+                        matchlist.Add(new Point2D(row, right));
+                        tiles[row, right].MarkSearch();                        
+                    }
                 }
                 else
                 {
@@ -336,8 +436,11 @@ namespace Match3
                 if(!bStopUp && IsSameUp(row, col, i))
                 {
                     var up = row - (i+1);
-                    matchlist.Add(new Point2D(up, col));
-                    tiles[up, col].IsChecked = true;
+                    if(!tiles[up, col].IsChecked)
+                    {
+                        matchlist.Add(new Point2D(up, col));
+                        tiles[up, col].MarkSearch();
+                    }
                 }
                 else
                 {
@@ -349,7 +452,7 @@ namespace Match3
                 {
                     var down = row + (i+1);
                     matchlist.Add(new Point2D(down, col));
-                    tiles[down, col].IsChecked = true;
+                    tiles[down, col].MarkSearch();
                 }
                 else
                 {
@@ -377,8 +480,10 @@ namespace Match3
 
             findinfo.AddTilePosition(row, col);
             
-            FindHoriMatch( row, col, findinfo);
-            FindVertMatch( row, col, findinfo);
+            //FindHoriMatch( row, col, findinfo);
+            //FindVertMatch( row, col, findinfo);
+            FindMatch( row, col, findinfo, FindDirection.Horizon);
+            FindMatch( row, col, findinfo, FindDirection.Vertical);
 
             // 매치가 확인 된 순간
             if( findinfo.isMatch )
@@ -452,10 +557,13 @@ namespace Match3
 
         public void DeleteMatchTiles()
         {
+            var output = new StringBuilder();
+
             nSendDeleteSignal = 0;
             for(int i=0; i<matches.Count; i++)
             {
                 MatchList list = matches[i];
+                output.AppendFormat($"{i}:");
                 foreach(Point2D pos in list)
                 {
                     var tile = tiles[pos.x, pos.y];
@@ -463,8 +571,17 @@ namespace Match3
                     nSendDeleteSignal++;
 
                     tiles[pos.x, pos.y] = null;
+
+                    output.AppendFormat($"[{pos.x},{pos.y}]");
                 }
             }
+
+            // test
+            if( matches.Count > 0)
+            {
+                Debug.LogFormat(output.ToString());
+            }
+
         }
 
         private bool IsEmptyPlace(int x, int y)
@@ -643,11 +760,6 @@ namespace Match3
         // - 매칭 타일
         // - 가로 세로 라인 제거
 
-        // 4. 규칙에 따라 타일 이동 시키기
-        // -> 채우고 이동하는 듯... (확인필요)
-
-        // 5. 빈 곳 타일 채우기
-
         // 6. 콤보
 
         // todo 
@@ -662,6 +774,7 @@ namespace Match3
         // OnFillTileSignal -> OnTileDropSignal
         public void OnFillTileSignal(FillTileSignal signal)
         {
+            Debug.LogFormat($"nSendDeleteSignal: {nSendDeleteSignal}");
             nSendDeleteSignal--;
             if( nSendDeleteSignal == 0)
             {
@@ -678,6 +791,8 @@ namespace Match3
                 Debug.LogFormat("다시 매치 검사하기");
                 if( FindAllMatches() > 0)
                     DeleteMatchTiles();
+                else 
+                    TileInput.blockInput = false; // 의존 문제 고려
             }
         }
 

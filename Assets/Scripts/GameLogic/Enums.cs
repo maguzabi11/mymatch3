@@ -11,4 +11,10 @@ namespace Match3
         Left,
         Right
     }
+
+    public enum FindDirection
+    {
+        Horizon,
+        Vertical
+    }
 }

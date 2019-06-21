@@ -52,6 +52,7 @@ namespace Match3
         {
             _signalBus = signalBus;
             _signalBus.Subscribe<FillTileSignal>(OnFillTileSignal);
+            _signalBus.Subscribe<TileDropSignal>(OnTileDropSignal);
         }
 
         public GamePanel()
@@ -214,6 +215,11 @@ namespace Match3
 
             public bool isMatch = false;
 
+            public int Length
+            {
+                get { return matchlist.Count; }
+            }
+
             public void Reset()
             {
                 matchlist.Clear();
@@ -223,6 +229,16 @@ namespace Match3
             public void AddTilePosition(int x, int y)
             {
                 matchlist.Add(new Point2D(x, y));
+            }
+
+            public void AddTilePosition(Point2D pos)
+            {
+                matchlist.Add(pos);
+            }
+
+            public void RemoveLast()
+            {
+                matchlist.RemoveAt(matchlist.Count-1);
             }
 
             public void CopyMatchList( MatchList input )
@@ -269,74 +285,86 @@ namespace Match3
 
         void FindHoriMatch(int row, int col, FindMatchInfo findinfo)
         {
-            int cntMatch = 1;
+            MatchList matchlist = new MatchList();
             bool bStopLeft = false;
             bool bStopRight = false;
             for (int i = 0; i < numCol-1; i++)
             {
                 if(!bStopLeft && IsSameLeft(row, col, i))
                 {
-                    cntMatch++;
-                    findinfo.AddTilePosition(row, col - (i+1));
-                    tiles[row, col - (i+1)].IsChecked = true;
+                    var left = col - (i+1);
+                    matchlist.Add(new Point2D(row, left));
+                    tiles[row, left].IsChecked = true;
                 }
                 else
                 {
-                    if(bStopRight) return;
+                    if(bStopRight)
+                        break;
                     bStopLeft = true;
                 }
 
                 if(!bStopRight && IsSameRight(row, col, i))
                 {
-                    cntMatch++;
-                    findinfo.AddTilePosition(row, col + (i+1));
-                    tiles[row, col + (i+1)].IsChecked = true;
+                    var right = col + (i+1);
+                    matchlist.Add(new Point2D(row, right));
+                    tiles[row, right].IsChecked = true;
                 }
                 else
                 {
-                    if(bStopLeft) return;
+                    if(bStopLeft)
+                        break;
                     bStopRight = true;
                 }
-
-                if(cntMatch >= 3)
-                    findinfo.isMatch = true;
             }   
+            
+            if(matchlist.Count >= 2)
+            {
+                findinfo.isMatch = true;
+                foreach( var pos in matchlist)
+                    findinfo.AddTilePosition(pos);
+            }
+            matchlist.Clear();
         }
 
         void FindVertMatch(int row, int col, FindMatchInfo findinfo)
         {
-            int cntMatch = 1;
+            MatchList matchlist = new MatchList();
             bool bStopUp = false;
             bool bStopDown = false;
             for (int i = 0; i < numRow-1; i++)
             {
                 if(!bStopUp && IsSameUp(row, col, i))
                 {
-                    cntMatch++;
-                    findinfo.AddTilePosition(row - (i+1), col);
-                    tiles[row - (i+1), col].IsChecked = true;
+                    var up = row - (i+1);
+                    matchlist.Add(new Point2D(up, col));
+                    tiles[up, col].IsChecked = true;
                 }
                 else
                 {
-                    if(bStopDown) return;
+                    if(bStopDown) break;
                     bStopUp = true;
                 }
 
                 if(!bStopDown && IsSameDown(row, col, i))
                 {
-                    cntMatch++;
-                    findinfo.AddTilePosition(row + (i+1), col);
-                    tiles[row + (i+1), col].IsChecked = true;
+                    var down = row + (i+1);
+                    matchlist.Add(new Point2D(down, col));
+                    tiles[down, col].IsChecked = true;
                 }
                 else
                 {
-                    if(bStopUp) return;
+                    if(bStopUp) break;
                     bStopDown = true;
                 }
-
-                if(cntMatch >= 3)
-                    findinfo.isMatch = true;
             }
+            
+            if(matchlist.Count >= 2)
+            {
+                findinfo.isMatch = true;
+                foreach( var pos in matchlist)
+                    findinfo.AddTilePosition(pos);
+            }             
+            matchlist.Clear();
         }
 
         private void FindMatchingTiles(int row, int col, FindMatchInfo findinfo)
@@ -424,6 +452,7 @@ namespace Match3
 
         public void DeleteMatchTiles()
         {
+            nSendDeleteSignal = 0;
             for(int i=0; i<matches.Count; i++)
             {
                 MatchList list = matches[i];
@@ -431,6 +460,7 @@ namespace Match3
                 {
                     var tile = tiles[pos.x, pos.y];
                     _signalBus.Fire(new TileDeleteSignal(tile));
+                    nSendDeleteSignal++;
 
                     tiles[pos.x, pos.y] = null;
                 }
@@ -445,11 +475,14 @@ namespace Match3
         // 이동 위치 계산 버그 있음. 
         public void FillTilesToEmptyPlace()
         {
+            nSendDropSignal = 0;
+            int lastrow = numRow-1;
             //1. 빈 자리로 이동 (밑으로 이동 규칙)
             for(int i=0; i<numCol; i++)
             {
                 bool bCopy = false;
-                int iCopy = numRow-1;
+                int iCopy = lastrow;
+                int numEmpty = 0;
                 for(int j=iCopy; j>=0; j--) // 바닥에서 위로
                 {
                     if(bCopy)
@@ -460,9 +493,11 @@ namespace Match3
                             tiles[iCopy,i] = tiles[j,i];
                             tiles[iCopy,i].MoveTo(iCopy,i);
                             tiles[j,i] = null;
-
+                            nSendDropSignal++;
                             iCopy--;
                         }
+                        else
+                            numEmpty++;
                     }
                     else 
                     {
@@ -470,16 +505,20 @@ namespace Match3
                         {
                             bCopy = true;
                             iCopy = j;
+                            numEmpty++;
                         }
                     }
                 }
 
-                if( iCopy < numRow-1)
-                    CreateTileAndSetPosition(iCopy, i);
+                if( numEmpty > 0)
+                    CreateTileAndSetPosition(numEmpty, i);
+
+                // if( iCopy < lastrow ) // 조건에 문제 있음. 한줄이 없으면 이 조건을 만족하지 못함.
+                //     CreateTileAndSetPosition(iCopy, i);
             }
         }
 
-        private void CreateTileAndSetPosition(int nNew, int col)
+        private void CreateTileAndSetPosition(int numEmpty, int col)
         {
             // 남은 빈 자리 확인
             Debug.LogFormat("{0}열 빈 자리 ", col);
@@ -487,18 +526,20 @@ namespace Match3
             int iVertCenter = NumRow / 2;
             float xOffset = GetOffset(NumCol);
             float yOffset = GetOffset(NumRow);
-            float startOffset = nNew + 1;
-            while (nNew >= 0)
+            float startOffset = numEmpty + 1;
+            int row = 0;
+            while (row < numEmpty)
             {
-                CreateTile(nNew, col, typeList[Random.Range(0, typeList.Count)]);
-                float y = iVertCenter - nNew + yOffset;
+                CreateTile(row, col, typeList[Random.Range(0, typeList.Count)]);
+                float y = iVertCenter - row + yOffset;
                 float fromY = y + startOffset;
                 float x = col - iHoriCenter + xOffset;
-                tiles[nNew, col].SetPosition(x, fromY);
-                tiles[nNew, col].MoveTo(x, y);
+                tiles[row, col].SetPosition(x, fromY);
+                tiles[row, col].MoveTo(x, y);
 
-                Debug.LogFormat($"[{nNew},{col}]");
-                nNew--;
+                Debug.LogFormat($"[{row},{col}]");
+                nSendDropSignal++;
+                row++;
             }
         }
 
@@ -614,18 +655,31 @@ namespace Match3
 
         ///
         #region 시그널 처리 함수
-        bool isFillTileSignal = false;
+        int nSendDeleteSignal;
+        int nSendDropSignal;
+
+        // Note: OnFillTileSignal과 OnTileDropSignal는 동시에 발생하면 안됨.
+        // OnFillTileSignal -> OnTileDropSignal
         public void OnFillTileSignal(FillTileSignal signal)
         {
-            // 여러 번 들어와도 한번만 처리
-            if(isFillTileSignal)
-                return;
-
-            isFillTileSignal = true;
-            FillTilesToEmptyPlace();
+            nSendDeleteSignal--;
+            if( nSendDeleteSignal == 0)
+            {
+                Debug.LogFormat("지워진 타일 채우고 떨어뜨리기");
+                FillTilesToEmptyPlace();
+            }
         }
 
-        
+        private void OnTileDropSignal(TileDropSignal signal)
+        {
+            nSendDropSignal--;
+            if(nSendDropSignal == 0)
+            {
+                Debug.LogFormat("다시 매치 검사하기");
+                if( FindAllMatches() > 0)
+                    DeleteMatchTiles();
+            }
+        }
 
         #endregion
     }

@@ -30,5 +30,13 @@ public class TileDeleteSignal
 public class FillTileSignal
 {}
 
+public class TileDropSignal
+{
+    public Tile tile;
+    public TileDropSignal(Tile tile)
+    {
+        this.tile = tile;
+    }    
+}
 
 }

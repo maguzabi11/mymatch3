@@ -11,6 +11,7 @@ public class CommonInstaller : MonoInstaller
         Container.DeclareSignal<TileMovementSignal>();
         Container.DeclareSignal<TileDeleteSignal>();
         Container.DeclareSignal<FillTileSignal>();
+        Container.DeclareSignal<TileDropSignal>();        
 
         // 방법1
         // Container.BindSignal<TileMovementSignal>()

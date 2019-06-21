@@ -23,6 +23,7 @@ namespace Tests
             Container.DeclareSignal<TileMovementSignal>().OptionalSubscriber();
             Container.DeclareSignal<TileDeleteSignal>().OptionalSubscriber();  
             Container.DeclareSignal<FillTileSignal>().OptionalSubscriber();
+            Container.DeclareSignal<TileDropSignal>();
 
             Container.BindFactory<UnityEngine.Object, TileInput, TileInput.Factory>()
                 .FromFactory<TileInputFactory>()
@@ -46,16 +47,16 @@ namespace Tests
         public void 매치발생확인()
         {
             gp.CreateSpecificTilesforTest();
-            
-            Assert.IsTrue(gp.IsMatch3Tile(0, 2));
+            Assert.IsFalse(gp.IsMatch3Tile(0, 2));
+            Assert.IsTrue(gp.IsMatch3Tile(1, 0));
         }
 
         [Test]
         public void TestMatchTiles()
         {
             gp.CreateSpecificTilesforTest();
-            Assert.That(gp.FindAllMatches(), Is.EqualTo(2));
-            gp.OutputTiles();
+            gp.OutputTiles();            
+            Assert.That(gp.FindAllMatches(), Is.EqualTo(1));
             gp.OutputMatches();
         }
 
@@ -83,9 +84,10 @@ namespace Tests
             gp.CreateSpecificTilesforTest();
             gp.FindAllMatches();
             gp.DeleteMatchTiles(); // 일련의 과정 중 하나
-            gp.FillTilesToEmptyPlace();
-            Assert.That(gp.tiles[3,0].Type, Is.EqualTo(3));
             gp.OutputTiles();
+            gp.FillTilesToEmptyPlace();
+            gp.OutputTiles();
+            Assert.That(gp.tiles[3,0].Type, Is.EqualTo(3));
         }
 
         [Test]
@@ -94,6 +96,24 @@ namespace Tests
             gp.CreateSpecificTilesforTest();
             Assert.That(gp.TrySwapTile(gp.tiles[1,1], TileMovement.Right), Is.True);
         }
+
+        [Test]
+        public void 타일_스왑후_매치확인2()
+        {
+            gp.CreateSpecificTilesforTest();
+            Assert.That(gp.TrySwapTile(gp.tiles[0,2], TileMovement.Down), Is.True);
+            // gp.DeleteMatchTiles();
+            // gp.OutputTiles();
+        }
+
+        [Test]
+        public void 타일_스왑후_매치확인3()
+        {
+            gp.CreateSpecificTilesforTest();
+            Assert.That(gp.TrySwapTile(gp.tiles[1,4], TileMovement.Down), Is.True);
+            gp.DeleteMatchTiles();
+            gp.OutputTiles();
+        }           
 
         //// A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use
         //// `yield return null;` to skip a frame.

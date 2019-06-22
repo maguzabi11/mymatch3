@@ -73,7 +73,7 @@ namespace Tests
         public void 타일생성_매치3_발생하지않게()
         {
             gp.CreatePanel(4, 5);
-            gp.CreateTilesWithoutMatch3();
+            gp.CreateTilesWithoutMatch();
             Assert.That(gp.FindAllMatches() == 0);
             gp.OutputTiles();
         }
@@ -94,14 +94,14 @@ namespace Tests
         public void 타일_스왑후에_매치발생확인()
         {
             gp.CreateSpecificTilesforTest();
-            Assert.That(gp.TrySwapTile(gp.tiles[1,1], TileMovement.Right), Is.True);
+            Assert.That(gp.TrySwapTile(gp.tiles[1,1], TileMovement.Right), Is.EqualTo(SwapTileResult.Success));
         }
 
         [Test]
         public void 타일_스왑후_매치확인2()
         {
             gp.CreateSpecificTilesforTest();
-            Assert.That(gp.TrySwapTile(gp.tiles[0,2], TileMovement.Down), Is.True);
+            Assert.That(gp.TrySwapTile(gp.tiles[0,2], TileMovement.Down), Is.EqualTo(SwapTileResult.Success));
             // gp.DeleteMatchTiles();
             // gp.OutputTiles();
         }
@@ -110,10 +110,20 @@ namespace Tests
         public void 타일_스왑후_매치확인3()
         {
             gp.CreateSpecificTilesforTest();
-            Assert.That(gp.TrySwapTile(gp.tiles[1,4], TileMovement.Down), Is.True);
+            Assert.That(gp.TrySwapTile(gp.tiles[1,4], TileMovement.Down), Is.EqualTo(SwapTileResult.Success));
             gp.DeleteMatchTiles();
             gp.OutputTiles();
-        }           
+        }
+
+        [Test]
+        public void 매치된_타일_중복확인()
+        {
+            gp.CreateforMatchTileTestCase();
+            gp.FindAllMatches();
+            gp.DeleteMatchTiles();
+            //gp.OutputTiles();
+        }
+
 
         //// A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use
         //// `yield return null;` to skip a frame.

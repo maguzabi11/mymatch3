@@ -41,7 +41,7 @@ public class TileController : MonoBehaviour
     public void InitTiles()
     {
         gp.CreatePanel(4, 5);
-        gp.CreateTilesWithoutMatch3(); // 반복된 루프 호출을 피하기 위함.
+        gp.CreateTilesWithoutMatch(); // 반복된 루프 호출을 피하기 위함.
         gp.OutputTiles();
         gp.SetTilePosition();
     }
@@ -60,11 +60,8 @@ public class TileController : MonoBehaviour
     // 이름 변경 후보: TrySwapAdjacentTile
     public void ReqMoveTile(Tile tile, TileMovement move)
     {
-        bool bRet = gp.TrySwapTile(tile, move);
-        if( !bRet )
+        if( gp.TrySwapTile(tile, move) == SwapTileResult.NoTile )
             TileInput.blockInput = false;
-        else
-            TileInput.blockInput = true;
     }
 
 }

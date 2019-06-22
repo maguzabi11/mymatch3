@@ -56,11 +56,13 @@ public class TileInput : MonoBehaviour
             if( diff.y > 0f )
             {
                 Debug.Log($"위로 이동");
+                blockInput = true;
                 _signalBus.Fire(new TileMovementSignal(refTile, TileMovement.Up));
             }
             else
             {
                 Debug.Log($"아래로 이동");
+                blockInput = true;
                 _signalBus.Fire(new TileMovementSignal(refTile, TileMovement.Down));
             }
         }
@@ -70,11 +72,13 @@ public class TileInput : MonoBehaviour
             if( diff.x > 0f )
             {
                 Debug.Log($"오른쪽으로 이동");
+                blockInput = true;
                 _signalBus.Fire(new TileMovementSignal(refTile, TileMovement.Right));
             }
             else
             {
                 Debug.Log($"왼쪽으로 이동");
+                blockInput = true;
                 _signalBus.Fire(new TileMovementSignal(refTile, TileMovement.Left));
             }
         }
@@ -83,22 +87,6 @@ public class TileInput : MonoBehaviour
     void OnMouseUp()
     {
         Debug.Log($"{gameObject.name}, {gameObject.GetHashCode()}");
-    }
-
-    public void MoveSelfTest(TileMovement move)
-    {
-        // 인접 타일도 같이 움직여야 하므로
-        // 여기서는 다른 클래스에 요청하는 걸로.
-        // controller.ReqMoveTile(Tile refTile, move);
-
-        if(move == TileMovement.Down)
-            gameObject.transform. DOMoveY(-1f, 1f); // 코루틴 염두...
-        // else if(TileMovement.Up)
-        //     ;
-        // else if(TileMovement.Left)
-        //     ;
-        // else if(TileMovement.Right)
-        //     ;
     }
 
 

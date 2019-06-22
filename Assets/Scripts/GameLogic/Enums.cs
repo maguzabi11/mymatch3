@@ -17,4 +17,12 @@ namespace Match3
         Horizon,
         Vertical
     }
+
+    // GamePanel::TrySwapTile Function Result
+    public enum SwapTileResult
+    {
+        NoTile,
+        Failure,
+        Success,
+    }
 }

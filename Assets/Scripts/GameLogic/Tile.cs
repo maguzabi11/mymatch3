@@ -21,9 +21,9 @@ public class Tile
     }
 
     int nfound;
-    public bool IsDuplicatedSearch
+    public bool IsMatched
     {
-        get {return nfound > 1;}
+        get {return nfound > 0;}
     }
 
     public void MarkSearch()

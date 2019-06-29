@@ -473,7 +473,7 @@ namespace Match3
         {
             var output = new StringBuilder();
 
-            nSendDeleteSignal = 0;
+            _nSendDeleteSignal = 0;
             for(int i=0; i<matches.Count; i++)
             {
                 MatchList list = matches[i];
@@ -482,7 +482,7 @@ namespace Match3
                 {
                     var tile = tiles[pos.x, pos.y];
                     _signalBus.Fire(new TileDeleteSignal(tile));
-                    nSendDeleteSignal++;
+                    _nSendDeleteSignal++;
 
                     tiles[pos.x, pos.y] = null;
 
@@ -503,50 +503,52 @@ namespace Match3
              return tiles[x, y] == null;
         }
 
-        // 이동 위치 계산 버그 있음. 
         public void FillTilesToEmptyPlace()
         {
-            nSendDropSignal = 0;
-            int lastrow = numRow-1;
+            _nSendDropSignal = 0;
             //1. 빈 자리로 이동 (밑으로 이동 규칙)
             for(int i=0; i<numCol; i++)
             {
-                bool bCopy = false;
-                int iCopy = lastrow;
-                int numEmpty = 0;
-                for(int j=iCopy; j>=0; j--) // 바닥에서 위로
+                int numEmpty = MoveTileToEmptySpace(i);
+                if (numEmpty > 0)
+                    CreateTileAndSetPosition(numEmpty, i);
+            }
+        }
+
+        private int MoveTileToEmptySpace(int col)
+        {
+            bool bCopy = false;
+            int itoCopy = numRow-1;
+            int numEmpty = 0;
+            for (int j = itoCopy; j >= 0; j--) // 바닥에서 위로
+            {
+                if (bCopy)
                 {
-                    if(bCopy)
+                    if (!IsEmptyPlace(j, col))
                     {
-                        if( !IsEmptyPlace(j, i) )
-                        {
-                            // 움직일 칸 수: iCopy - j
-                            tiles[iCopy,i] = tiles[j,i];
-                            tiles[iCopy,i].MoveTo(iCopy,i);
-                            tiles[j,i] = null;
-                            nSendDropSignal++;
-                            iCopy--;
-                        }
-                        else
-                            numEmpty++;
+                        // 움직일 칸 수: iCopy - j
+                        tiles[itoCopy, col] = tiles[j, col];
+                        tiles[itoCopy, col].MoveTo(itoCopy, col);
+                        tiles[j, col] = null;
+
+                        _nSendDropSignal++;
+                        itoCopy--;
                     }
-                    else 
+                    else
+                        numEmpty++;
+                }
+                else
+                {
+                    if (IsEmptyPlace(j, col))
                     {
-                        if( IsEmptyPlace(j, i) )
-                        {
-                            bCopy = true;
-                            iCopy = j;
-                            numEmpty++;
-                        }
+                        bCopy = true;
+                        itoCopy = j;
+                        numEmpty++;
                     }
                 }
-
-                if( numEmpty > 0)
-                    CreateTileAndSetPosition(numEmpty, i);
-
-                // if( iCopy < lastrow ) // 조건에 문제 있음. 한줄이 없으면 이 조건을 만족하지 못함.
-                //     CreateTileAndSetPosition(iCopy, i);
             }
+
+            return numEmpty;
         }
 
         private void CreateTileAndSetPosition(int numEmpty, int col)
@@ -559,19 +561,30 @@ namespace Match3
             float yOffset = GetOffset(NumRow);
             float startOffset = numEmpty + 1;
             int row = 0;
+
             while (row < numEmpty)
             {
-                CreateTile(row, col, typeList[Random.Range(0, typeList.Count)]);
+                int tileType = GetRemovableTile(row, col);
+                CreateTile(row, col, typeList[tileType]);
+                
+                float x = col - iHoriCenter + xOffset;
                 float y = iVertCenter - row + yOffset;
                 float fromY = y + startOffset;
-                float x = col - iHoriCenter + xOffset;
                 tiles[row, col].SetPosition(x, fromY);
                 tiles[row, col].MoveTo(x, y);
 
                 Debug.LogFormat($"[{row},{col}]");
-                nSendDropSignal++;
+                _nSendDropSignal++;
                 row++;
             }
+        }
+
+        int GetRemovableTile(int row, int col)
+        {
+            // 패턴으로 체크
+
+            // 없거나 하면 랜덤생성
+            return Random.Range(0, typeList.Count);
         }
 
         // 홀수, 짝수에 따라 배치 조정
@@ -683,16 +696,16 @@ namespace Match3
 
         ///
         #region 시그널 처리 함수
-        int nSendDeleteSignal;
-        int nSendDropSignal;
+        int _nSendDeleteSignal;
+        int _nSendDropSignal;
 
         // Note: OnFillTileSignal과 OnTileDropSignal는 동시에 발생하면 안됨.
         // OnFillTileSignal -> OnTileDropSignal
         public void OnFillTileSignal(FillTileSignal signal)
         {
-            Debug.LogFormat($"nSendDeleteSignal: {nSendDeleteSignal}");
-            nSendDeleteSignal--;
-            if( nSendDeleteSignal == 0)
+            Debug.LogFormat($"nSendDeleteSignal: {_nSendDeleteSignal}");
+            _nSendDeleteSignal--;
+            if( _nSendDeleteSignal == 0)
             {
                 Debug.LogFormat("지워진 타일 채우고 떨어뜨리기");
                 FillTilesToEmptyPlace();
@@ -701,8 +714,8 @@ namespace Match3
 
         private void OnTileDropSignal(TileDropSignal signal)
         {
-            nSendDropSignal--;
-            if(nSendDropSignal == 0)
+            _nSendDropSignal--;
+            if(_nSendDropSignal == 0)
             {
                 Debug.LogFormat("다시 매치 검사하기");
                 if( FindAllMatches() > 0)

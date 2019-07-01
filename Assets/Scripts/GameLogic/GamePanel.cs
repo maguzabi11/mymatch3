@@ -12,13 +12,13 @@ namespace Match3
 
     public struct Point2D
     {
-        public int x;
-        public int y;
+        public int row;
+        public int col;
 
         public Point2D(int x, int y) : this()
         {
-            this.x = x;
-            this.y = y;
+            this.row = x;
+            this.col = y;
         }
     }
 
@@ -280,7 +280,7 @@ namespace Match3
             FindMatchInfo findinfo = new FindMatchInfo();
 
             for (int i = 0; i < poslist.Length; i++)
-                FindMatchingTiles(poslist[i].x, poslist[i].y, findinfo);
+                FindMatchingTiles(poslist[i].row, poslist[i].col, findinfo);
 
             return matches.Count;
         }
@@ -462,7 +462,7 @@ namespace Match3
                 Debug.LogFormat("match[{0}]", i);
 
                 foreach(Point2D pos in list)
-                    str.AppendFormat($"[{pos.x},{pos.y}] ");
+                    str.AppendFormat($"[{pos.row},{pos.col}] ");
                 str.AppendLine();
                 Debug.Log(str.ToString());
                 str.Clear();
@@ -480,13 +480,13 @@ namespace Match3
                 output.AppendFormat($"{i}:");
                 foreach(Point2D pos in list)
                 {
-                    var tile = tiles[pos.x, pos.y];
+                    var tile = tiles[pos.row, pos.col];
                     _signalBus.Fire(new TileDeleteSignal(tile));
                     _nSendDeleteSignal++;
 
-                    tiles[pos.x, pos.y] = null;
+                    tiles[pos.row, pos.col] = null;
 
-                    output.AppendFormat($"[{pos.x},{pos.y}]");
+                    output.AppendFormat($"[{pos.row},{pos.col}]");
                 }
             }
 
@@ -627,21 +627,15 @@ namespace Match3
         {
             var location = tile.GetLocation();
             Tile adjTile = null;
-            if(move == TileMovement.Up && location.x > 0) 
-                adjTile = tiles[location.x-1, location.y];
-            else if(move == TileMovement.Down && location.x < GetLastIndexRow() )
-                adjTile = tiles[location.x+1, location.y];
-            else if(move == TileMovement.Left && location.y > 0)
-                adjTile = tiles[location.x, location.y-1];
-            else if(move == TileMovement.Right && location.y < GetLastIndexCol())
-                adjTile = tiles[location.x, location.y+1];
+            if(move == TileMovement.Up && location.row > 0) 
+                adjTile = tiles[location.row-1, location.col];
+            else if(move == TileMovement.Down && location.row < GetLastIndexRow() )
+                adjTile = tiles[location.row+1, location.col];
+            else if(move == TileMovement.Left && location.col > 0)
+                adjTile = tiles[location.row, location.col-1];
+            else if(move == TileMovement.Right && location.col < GetLastIndexCol())
+                adjTile = tiles[location.row, location.col+1];
             return adjTile;
-        }
-
-        Tile GetUpTile(Tile tile, int offset = 0)
-        {
-            var location = tile.GetLocation();
-            return (location.x - offset > 0) ? tiles[location.x-(1+offset), location.y] : null;
         }
 
         public bool SwapTile(Tile src, Tile dst )
@@ -650,10 +644,10 @@ namespace Match3
             var dstPos = dst.GetLocation();
 
             // 둘이 바뀌었다고 가정하고 두 인접 타일에 대해 확인을 해야한다.
-            tiles[srcPos.x,srcPos.y] = dst;
-            tiles[dstPos.x,dstPos.y] = src;
+            tiles[srcPos.row,srcPos.col] = dst;
+            tiles[dstPos.row,dstPos.col] = src;
 
-            bool isMatch = (IsMatch3Tile(srcPos.x, srcPos.y) || IsMatch3Tile(dstPos.x, dstPos.y));
+            bool isMatch = (IsMatch3Tile(srcPos.row, srcPos.col) || IsMatch3Tile(dstPos.row, dstPos.col));
             //  위 함수 대신 매치 정보를 포함하는
 
             src.MoveSwap(dst, !isMatch);
@@ -669,8 +663,8 @@ namespace Match3
             }
             else
             {
-                tiles[srcPos.x,srcPos.y] = src;
-                tiles[dstPos.x,dstPos.y] = dst;
+                tiles[srcPos.row,srcPos.col] = src;
+                tiles[dstPos.row,dstPos.col] = dst;
                 Debug.LogFormat("교환하지 않음. yoyo 발생");
                 return false;
             }            
@@ -693,6 +687,57 @@ namespace Match3
 
         // todo 
         // - tile pool 필요
+
+        // 매치 가능 수
+        public int NumMatchable()
+        {
+            //List<Point2D> list = new List<Point2D>();
+            int count = 0;
+            for (int i = 0; i < numRow; i++)
+            {
+                for (int j = 0; j < numCol; j++)
+                {
+                    if(tiles[i,j] != null && IsMatchablePlace(i, j))
+                    {
+                        //list.Add(new Point2D(i,j));
+                        count++;
+                    }
+                } 
+            }
+            return count;
+        }
+
+        // 현재 위치에서 매치 할 수 있는지 여부를 확인.
+        public bool IsMatchablePlace(int row, int col)
+        {
+            var pattern = MatchablePattern.Instance;
+            // 패턴 쪽으로 이동할듯
+            for(int p=0; p<pattern.Length; p++)
+            {
+                var point1 = pattern.GetPatternPos(p, 0, row, col);
+                var point2 = pattern.GetPatternPos(p, 1, row, col);
+                if( Isbound(point1) && Isbound(point2))
+                {
+                    if(tiles[point1.row, point1.col] == null || tiles[point2.row, point2.col] == null )
+                        continue;
+
+                    // 모두 같은 타입인지 확인 (코드가 길다...)
+                    if( tiles[row,col].Type == tiles[point1.row, point1.col].Type &&
+                        tiles[row,col].Type == tiles[point2.row, point2.col].Type)
+                        return true;
+                }                    
+            }
+            return false;
+        }
+
+        public bool Isbound(Point2D pos)
+        {
+            if( pos.col < 0 || pos.col >= NumCol) return false;
+            if( pos.row < 0 || pos.row >= NumRow) return false;
+
+            return true;
+        }
+        
 
         ///
         #region 시그널 처리 함수

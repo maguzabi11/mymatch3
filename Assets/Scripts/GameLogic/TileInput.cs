@@ -33,7 +33,7 @@ public class TileInput : MonoBehaviour
     void OnMouseDown()
     {
         pos = Input.mousePosition;
-        Debug.Log($"OnMouseDown [{refTile.GetLocation().x}, {refTile.GetLocation().y}] {gameObject.name}, {gameObject.GetHashCode()}");                
+        Debug.Log($"OnMouseDown [{refTile.GetLocation().row}, {refTile.GetLocation().col}] {gameObject.name}, {gameObject.GetHashCode()}");                
     }
 
     // test 이벤트 핸들러

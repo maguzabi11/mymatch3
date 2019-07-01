@@ -104,19 +104,19 @@ public class Tile
             return;
 
         // 이동할 양
-        var moveY = location.x - row; // 수직 이동
-        var moveX = location.y - col; // 수평 이동
+        var moveY = location.row - row; // 수직 이동
+        var moveX = location.col - col; // 수평 이동
 
         var vecTo = gameTile.transform.position;
         vecTo.x += moveX;
         vecTo.y += moveY;
 
         Debug.LogFormat("moveTo [{0}, {1}] -> [{2}, {3}]", 
-            location.x, location.y, row, col);
+            location.row, location.col, row, col);
 
         PlayMove(vecTo);
-        location.x = row;
-        location.y = col;
+        location.row = row;
+        location.col = col;
     }
 
     public void MoveTo(float x, float y)
@@ -171,7 +171,7 @@ public class Tile
     {
         var tmpLocation = tile.GetLocation();
 
-        Debug.LogFormat($"[{location.x},{location.y}]과 [{tmpLocation.x},{tmpLocation.y}] 교환");
+        Debug.LogFormat($"[{location.row},{location.col}]과 [{tmpLocation.row},{tmpLocation.col}] 교환");
         // 로케이션 교환
         
         tile.SetLocation(location);

@@ -124,7 +124,13 @@ namespace Tests
             //gp.OutputTiles();
         }
 
-
+        [Test]
+        public void 매치_가능_검사()
+        {
+            gp.CreateSpecificTilesforTest();
+            int num = gp.NumMatchable(); // 각 매치에 대해 확인해야함.
+            Debug.LogFormat($"matchable count: {num}");
+        }
         //// A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use
         //// `yield return null;` to skip a frame.
         //[UnityTest]

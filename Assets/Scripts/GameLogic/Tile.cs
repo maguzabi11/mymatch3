@@ -151,7 +151,7 @@ public class Tile
             gameTile.transform.DOMove(new Vector3(vecTo.x, vecTo.y), duration);
             tile.gameTile.transform.DOMove(new Vector3(vecFrom.x, vecFrom.y), duration)
                 .OnComplete( () => {
-                        TileInput.blockInput = false; // FIX: 좀 더 후에 풀어야 함.
+                        //TileInput.blockInput = false; // FIX: 좀 더 후에 풀어야 함.
                         Debug.Log("교환 애니 종료");
                         gp.DeleteMatchTiles();
                     });

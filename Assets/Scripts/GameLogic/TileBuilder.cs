@@ -51,6 +51,15 @@ public class TileBuilder
     {
         tile.SetTileObject( CreateTileResource(tile.Type), tileRoot );
     }
+
+    public void ChangeTileType(Tile tile, int type)
+    {
+        Object findtile;
+        bool bGet = dicTiles.TryGetValue(type, out findtile);
+        var objTile = findtile as GameObject; // 되는 건가?
+        tile.ChangeType(type);
+        tile.ChangeTile(objTile.GetComponent<SpriteRenderer>().sprite);
+    }
 }
 
 }

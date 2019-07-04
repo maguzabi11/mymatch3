@@ -195,6 +195,18 @@ public class Tile
         gameTile.SetActive(false);
         Object.Destroy(gameTile);
     }
+
+    public void ChangeType(int type)
+    {
+        this.type = type;
+        // gameTile. 리소스를 바꾸면 지우고 다시 생새어하는 번거로움이 없어짐.
+    }
+
+    public void ChangeTile(Sprite sprite)
+    {
+        // 같은 스프라이트를 가리킨다?
+        gameTile.GetComponent<SpriteRenderer>().sprite = sprite;
+    }
 }
 
 }

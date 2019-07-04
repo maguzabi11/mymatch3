@@ -10,6 +10,7 @@ namespace Match3
     using MatchList = List<Point2D>;
     using Random = UnityEngine.Random;
 
+    [Serializable]
     public struct Point2D
     {
         public int row;
@@ -506,13 +507,64 @@ namespace Match3
         public void FillTilesToEmptyPlace()
         {
             _nSendDropSignal = 0;
+
+            List<Point2D> createList = new List<Point2D>();
             //1. 빈 자리로 이동 (밑으로 이동 규칙)
             for(int i=0; i<numCol; i++)
             {
                 int numEmpty = MoveTileToEmptySpace(i);
                 if (numEmpty > 0)
+                {
                     CreateTileAndSetPosition(numEmpty, i);
+                    
+                    for(int row=0; row<numEmpty; row++)
+                        createList.Add(new Point2D(row, i));
+                }
             }
+
+            // 매치 가능 없을 때 처리는 여기로
+            int num = NumMatchable();
+            Debug.LogFormat($"matchable count: {num}");
+            if(num == 0 )
+            {
+                List<int> tmpTypeList = new List<int>();
+                bool isFinished = false;
+                // 확인 후 함수로 추출... (params: in createList )
+                foreach( var pos in createList)
+                {
+                    tmpTypeList.AddRange(typeList);
+
+                    // 매치가능한 타일을 먼저 알아내고 
+                    while( tmpTypeList.Count > 0)
+                    {
+                        int type = tmpTypeList[Random.Range(0, tmpTypeList.Count)];
+                        bool isDifferant = (tiles[pos.row, pos.col].Type != type);
+                        if( isDifferant && IsMatchablePlace(pos.row, pos.col, type) )
+                        {
+                            Debug.LogFormat($"try to find the matchable type:[{pos.row},{pos.col}] {type}");
+                            
+                            // 만들었던 타일을 지우고 다시 만든다.
+                            ChangeTile(pos.row, pos.col, type);
+                            isFinished = true;
+                            break;
+                        }
+                        else
+                        {
+                            tmpTypeList.Remove(type);
+                        }
+                    }
+
+                    if(isFinished)
+                        break;
+                }
+            }            
+
+            createList.Clear();
+        }
+
+        private void ChangeTile(int row, int col, int type)
+        {
+            _tilebuilder.ChangeTileType(tiles[row, col], type);
         }
 
         private int MoveTileToEmptySpace(int col)
@@ -697,7 +749,7 @@ namespace Match3
             {
                 for (int j = 0; j < numCol; j++)
                 {
-                    if(tiles[i,j] != null && IsMatchablePlace(i, j))
+                    if(tiles[i,j] != null && IsMatchablePlace(i, j, tiles[i,j].Type))
                     {
                         //list.Add(new Point2D(i,j));
                         count++;
@@ -708,7 +760,7 @@ namespace Match3
         }
 
         // 현재 위치에서 매치 할 수 있는지 여부를 확인.
-        public bool IsMatchablePlace(int row, int col)
+        public bool IsMatchablePlace(int row, int col, int type)
         {
             var pattern = MatchablePattern.Instance;
             // 패턴 쪽으로 이동할듯
@@ -722,8 +774,8 @@ namespace Match3
                         continue;
 
                     // 모두 같은 타입인지 확인 (코드가 길다...)
-                    if( tiles[row,col].Type == tiles[point1.row, point1.col].Type &&
-                        tiles[row,col].Type == tiles[point2.row, point2.col].Type)
+                    if(type == tiles[point1.row, point1.col].Type &&
+                        type == tiles[point2.row, point2.col].Type)
                         return true;
                 }                    
             }

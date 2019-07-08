@@ -38,7 +38,7 @@ namespace Match3
 
         List<MatchList> matches = new List<MatchList>();
 
-        List<int> typeList = new List<int> {1,2,3,4};
+        List<int> typeList = new List<int> {1,2,3,4,5};
 
         [Inject]
         TileBuilder _tilebuilder;

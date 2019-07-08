@@ -32,6 +32,8 @@ public class TileBuilder
         dicTiles.Add(3, tile);
         tile = Resources.Load("Food4");
         dicTiles.Add(4, tile);
+        tile = Resources.Load("Food5");
+        dicTiles.Add(5, tile);        
     }
    
     public GameObject CreateTileResource(int type)

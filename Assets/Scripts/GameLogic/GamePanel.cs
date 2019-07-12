@@ -10,19 +10,6 @@ namespace Match3
 {
     using MatchList = List<Point2D>;
 
-    [Serializable]
-    public struct Point2D
-    {
-        public int row;
-        public int col;
-
-        public Point2D(int x, int y) : this()
-        {
-            this.row = x;
-            this.col = y;
-        }
-    }
-
     public class GamePanel
     {
         public Tile[,] tiles;
@@ -36,7 +23,7 @@ namespace Match3
         public int GetLastIndexRow() { return numRow -1; }
         public int GetLastIndexCol() { return numCol -1; }
 
-        List<MatchList> matches = new List<MatchList>();
+        //List<MatchList> matches = new List<MatchList>();
 
         List<int> typeList = new List<int> {1,2,3,4,5};
 
@@ -50,6 +37,9 @@ namespace Match3
         ScoreManager _scoreManager;
 
         SignalBus _signalBus;
+
+        [Inject]
+        MatchingChecker _matchingChecker;
 
         [Inject]
         public void Constructor(SignalBus signalBus)
@@ -239,55 +229,16 @@ namespace Match3
             return false;
         }
 
-        // 검색에 필요한 정보
-        class FindMatchInfo
-        {
-            public MatchList matchlist = new MatchList();
+        // public int FindMatches(Point2D[] poslist)
+        // {
+        //     ResetSearch();
+        //     FindMatchInfo findinfo = new FindMatchInfo();
 
-            public bool isMatch = false;
+        //     for (int i = 0; i < poslist.Length; i++)
+        //         FindMatchingTiles(poslist[i].row, poslist[i].col, findinfo);
 
-            public int Length
-            {
-                get { return matchlist.Count; }
-            }
-
-            public void Reset()
-            {
-                matchlist.Clear();
-                isMatch = false;
-            }
-
-            public void AddTilePosition(int x, int y)
-            {
-                matchlist.Add(new Point2D(x, y));
-            }
-
-            public void AddTilePosition(Point2D pos)
-            {
-                matchlist.Add(pos);
-            }
-
-            public void RemoveLast()
-            {
-                matchlist.RemoveAt(matchlist.Count-1);
-            }
-
-            public void CopyMatchList( MatchList input )
-            {
-                input = matchlist; // 내용을 복사
-            }
-        }
-
-        public int FindMatches(Point2D[] poslist)
-        {
-            ResetSearch();
-            FindMatchInfo findinfo = new FindMatchInfo();
-
-            for (int i = 0; i < poslist.Length; i++)
-                FindMatchingTiles(poslist[i].row, poslist[i].col, findinfo);
-
-            return matches.Count;
-        }
+        //     return matches.Count;
+        // }
 
 
         // 매칭 타일 찾기
@@ -295,182 +246,22 @@ namespace Match3
         // 2. 특정 위치에서 매칭 검사
         public int FindAllMatches()
         {
-            ResetSearch();
-            FindMatchInfo findinfo = new FindMatchInfo();
-
-            for (int i = 0; i < numRow; i++)
-                for (int j = 0; j < numCol; j++)
-                    FindMatchingTiles(i, j, findinfo);
-
-            return matches.Count;
+            return _matchingChecker.FindAllMatches();
         }
 
-        private void ResetSearch()
+        public void ResetSearch()
         {
             // 검사 속성 리셋
-            matches.Clear();
+            //matches.Clear();
             for (int i = 0; i < numRow; i++)
                 for (int j = 0; j < numCol; j++)
                     tiles[i, j].ResetSearch();
         }
 
-        delegate bool compareTile(int row, int col, int offset); // isSame~
-        delegate  Tile getNeighborTile(int row, int col, int offset);
-        
-
-        void FindMatch(int row, int col, FindMatchInfo findinfo, FindDirection dir)
-        {
-            int num = 0;
-            compareTile compareTile1;
-            compareTile compareTile2;
-            getNeighborTile getTile1;
-            getNeighborTile getTile2;            
-            if( dir == FindDirection.Horizon)
-            {
-                num = numCol-1;
-                compareTile1 = IsSameLeft;
-                compareTile2 = IsSameRight;
-                getTile1 = GetLeftTile;
-                getTile2 = GetRightTile;
-            }
-            else
-            {
-                num = numRow-1;
-                compareTile1 = IsSameUp;
-                compareTile2 = IsSameDown;
-                getTile1 = GetUpTile;
-                getTile2 = GetDownTile;
-            }
-
-            List<Tile> matchCandidates = new List<Tile>();
-            bool bStopLeft = false;
-            bool bStopRight = false;
-            for (int i = 0; i < num; i++)
-            {
-                if(!bStopLeft && compareTile1(row, col, i))
-                {
-                    var tile = getTile1(row, col, i);
-                    matchCandidates.Add(tile);
-
-                }
-                else
-                {
-                    if(bStopRight)
-                        break;
-                    bStopLeft = true;
-                }
-
-                if(!bStopRight && compareTile2(row, col, i))
-                {
-                    var tile = getTile2(row, col, i);
-                    matchCandidates.Add(tile);
-
-                }
-                else
-                {
-                    if(bStopLeft)
-                        break;
-                    bStopRight = true;
-                }
-            }   
-            
-            if(matchCandidates.Count >= 2)
-            {
-                findinfo.isMatch = true;
-                foreach( var tile in matchCandidates)
-                {
-                    if( tile.IsMatched == false )
-                    {
-                        findinfo.AddTilePosition(tile.GetLocation());
-                        tile.MarkSearch();
-                    }
-                }
-            }
-            matchCandidates.Clear();
-        }        
-
-
-        private void FindMatchingTiles(int row, int col, FindMatchInfo findinfo)
-        {
-            Tile baseTile = tiles[row, col];
-            if (baseTile.IsChecked)
-                return;
-            else
-                baseTile.IsChecked = true;
-
-            findinfo.AddTilePosition(row, col);
-            
-            FindMatch( row, col, findinfo, FindDirection.Horizon);
-            FindMatch( row, col, findinfo, FindDirection.Vertical);
-
-            if( findinfo.isMatch )
-                matches.Add(new MatchList(findinfo.matchlist));
-
-            findinfo.Reset();
-        }
-
-        // 모든 인접을 검사하는 함수 : 현재 호출하지 않음
-        private bool FindMatchingTile(int row, int col, FindMatchInfo findinfo)
-        {
-            Tile baseTile = tiles[row, col];
-            if (baseTile.IsChecked)
-                return false;
-            else
-                baseTile.IsChecked = true;
-
-            findinfo.AddTilePosition(row, col);
-
-            // 3 매치 확인
-            if( !findinfo.isMatch )
-                findinfo.isMatch = IsMatch3Tile(row,  col);
-
-            // 검사 범위 인접 4개
-            // 상
-            int up = row - 1;
-            if ( up >= 0 && IsSameTile(up, col, baseTile))
-                FindMatchingTile(up, col, findinfo);
-
-            // 하
-            int down = row + 1;
-            if ( down < numRow && IsSameTile(down, col, baseTile))
-                FindMatchingTile(down, col, findinfo);
-                
-
-            // 좌
-            int left = col - 1;
-            if ( left >= 0 && IsSameTile(row, left, baseTile))
-                FindMatchingTile(row, left, findinfo);
-                
-
-            // 우
-            int right = col + 1;
-            if ( right < numCol && IsSameTile(row, right, baseTile))
-                FindMatchingTile(row, right, findinfo);
-
-            return false;
-        }
-
-        //
-        private bool IsSameTile(int x, int y, Tile baseTile)
-        {
-            Tile targetTile = tiles[x, y];
-            return (targetTile.IsChecked == false && baseTile.Type == targetTile.Type);
-        }
-
+   
         public void OutputMatches()
         {
-            StringBuilder str = new StringBuilder(64);
-            for(int i=0; i<matches.Count; i++)
-            {
-                MatchList list = matches[i];
-                Debug.LogFormat("match[{0}]", i);
-
-                foreach(Point2D pos in list)
-                    str.AppendFormat($"[{pos.row},{pos.col}] ");
-                str.AppendLine();
-                Debug.Log(str.ToString());
-                str.Clear();
-            }
+            _matchingChecker.OutputMatches();
         }
 
         public void DeleteMatchTiles()
@@ -478,6 +269,7 @@ namespace Match3
             var output = new StringBuilder();
 
             _nSendDeleteSignal = 0;
+            var matches = _matchingChecker.GetMatchInfo();
             for(int i=0; i<matches.Count; i++)
             {
                 MatchList list = matches[i];
@@ -716,7 +508,7 @@ namespace Match3
             if( isMatch )
             {
                 // 애니메이션 처리 전에 검사
-                int cntMatch = FindMatches( new Point2D[] {srcPos, dstPos} );
+                int cntMatch = _matchingChecker.FindMatches( new Point2D[] {srcPos, dstPos} );
                 src.SwapLocation(dst);
                 // 필요한 경우 시그널 생성
                 Debug.LogFormat("매치!");

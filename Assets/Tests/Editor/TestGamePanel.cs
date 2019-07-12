@@ -30,7 +30,9 @@ namespace Tests
                 .WhenInjectedInto<TileBuilder>();
                 
             Container.Bind<TileBuilder>().AsSingle().NonLazy(); 
+            Container.Bind<ScoreManager>().AsSingle().NonLazy();
             Container.Bind<GamePanel>().AsSingle();
+            Container.Bind<MatchingChecker>().AsSingle();
             Container.BindFactory<int, Point2D, Tile, Tile.Factory>();
             Container.Inject(this);
 

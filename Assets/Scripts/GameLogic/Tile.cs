@@ -43,6 +43,10 @@ public class Tile
     GameObject gameTile;
 
     Point2D location;
+    public int row
+    { get { return location.row; }}
+    public int col
+    { get { return location.col; }}    
 
     // 설정 값들은 데이터로
     const float duration = 0.5f;

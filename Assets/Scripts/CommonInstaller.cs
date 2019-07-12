@@ -21,6 +21,7 @@ public class CommonInstaller : MonoInstaller
             .FromFactory<TileInputFactory>()
             .WhenInjectedInto<TileBuilder>();
 
+        Container.Bind<ScoreManager>().AsSingle().NonLazy();
         Container.Bind<TileBuilder>().AsSingle().NonLazy();
         Container.Bind<GamePanel>().AsSingle();
         Container.BindFactory<int, Point2D, Tile, Tile.Factory>();

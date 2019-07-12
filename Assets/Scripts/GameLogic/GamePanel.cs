@@ -4,11 +4,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
+using Random = UnityEngine.Random;
 
 namespace Match3
 {
     using MatchList = List<Point2D>;
-    using Random = UnityEngine.Random;
 
     [Serializable]
     public struct Point2D
@@ -45,6 +45,9 @@ namespace Match3
 
         [Inject]
         Tile.Factory _factory;
+
+        [Inject]
+        ScoreManager _scoreManager;
 
         SignalBus _signalBus;
 
@@ -495,6 +498,10 @@ namespace Match3
             if( matches.Count > 0)
             {
                 Debug.LogFormat(output.ToString());
+
+                int getPoint = _scoreManager.Calculate(matches);
+                Debug.LogFormat($"Point:{getPoint}");
+                Debug.LogFormat($"Score:{_scoreManager.Score}");
             }
 
         }
@@ -538,6 +545,8 @@ namespace Match3
                     while( tmpTypeList.Count > 0)
                     {
                         int type = tmpTypeList[Random.Range(0, tmpTypeList.Count)];
+
+                        // 다른 타입의 타일을 대입해 본다.
                         bool isDifferant = (tiles[pos.row, pos.col].Type != type);
                         if( isDifferant && IsMatchablePlace(pos.row, pos.col, type) )
                         {
@@ -735,9 +744,7 @@ namespace Match3
         // - 매칭 타일
         // - 가로 세로 라인 제거
 
-        // 6. 콤보
-
-        // todo 
+         // todo 
         // - tile pool 필요
 
         // 매치 가능 수

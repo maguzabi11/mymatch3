@@ -229,18 +229,6 @@ namespace Match3
             return false;
         }
 
-        // public int FindMatches(Point2D[] poslist)
-        // {
-        //     ResetSearch();
-        //     FindMatchInfo findinfo = new FindMatchInfo();
-
-        //     for (int i = 0; i < poslist.Length; i++)
-        //         FindMatchingTiles(poslist[i].row, poslist[i].col, findinfo);
-
-        //     return matches.Count;
-        // }
-
-
         // 매칭 타일 찾기
         // 1. 전체 검사
         // 2. 특정 위치에서 매칭 검사
@@ -252,7 +240,6 @@ namespace Match3
         public void ResetSearch()
         {
             // 검사 속성 리셋
-            //matches.Clear();
             for (int i = 0; i < numRow; i++)
                 for (int j = 0; j < numCol; j++)
                     tiles[i, j].ResetSearch();
@@ -272,7 +259,7 @@ namespace Match3
             var matches = _matchingChecker.GetMatchInfo();
             for(int i=0; i<matches.Count; i++)
             {
-                MatchList list = matches[i];
+                MatchList list = matches[i].matchlist;
                 output.AppendFormat($"{i}:");
                 foreach(Point2D pos in list)
                 {
@@ -599,7 +586,7 @@ namespace Match3
         // OnFillTileSignal -> OnTileDropSignal
         public void OnFillTileSignal(FillTileSignal signal)
         {
-            Debug.LogFormat($"nSendDeleteSignal: {_nSendDeleteSignal}");
+            //Debug.LogFormat($"nSendDeleteSignal: {_nSendDeleteSignal}");
             _nSendDeleteSignal--;
             if( _nSendDeleteSignal == 0)
             {

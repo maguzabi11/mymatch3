@@ -22,14 +22,14 @@ public class ScoreManager
         _score = 0;
     }
 
-    public int Calculate( List<MatchList> matches )
+    public int Calculate( List<FindMatchInfo> matches )
     {
         int pointBase = 10;
         int sum = 0;
 
         for(int i=0; i<matches.Count; ++i)
         {
-            sum += matches[i].Count * pointBase;
+            sum += matches[i].matchlist.Count * pointBase;
             pointBase += 5;
         }
 

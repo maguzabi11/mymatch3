@@ -4,6 +4,17 @@ using UnityEngine;
 
 namespace Match3
 {
+    // 매칭 조건에 의해 생성되는 타일의 종류
+    public enum RemoveType
+    {
+        Normal,
+        Butterfly,
+        HorizonRemover,
+        VerticalRemover,
+        Bomb,
+        KindRemover
+    }
+
     public enum TileMovement
     {
         Up,

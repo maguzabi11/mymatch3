@@ -15,6 +15,8 @@ public class Tile
     public int Type
     { get { return type; } }
 
+    public RemoveType removeType;
+
     public bool IsChecked
     {
         get; set;

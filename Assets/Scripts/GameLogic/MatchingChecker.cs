@@ -17,10 +17,9 @@ namespace Match3
  */
 public class MatchingChecker
 {
-    List<MatchList> matches = new List<MatchList>();
-    FindMatchInfo findinfo = new FindMatchInfo();
+    MatchInfo findinfo = new MatchInfo();
 
-    List<FindMatchInfo> matchInfos = new List<FindMatchInfo>(); // 추가 정보를 포함한 매치 리스트
+    List<MatchInfo> matchInfos = new List<MatchInfo>(); // 추가 정보를 포함한 매치 리스트
     
 
     GamePanel _gamepanel;
@@ -31,9 +30,19 @@ public class MatchingChecker
         _gamepanel = gamepanel;
     }
 
-    public List<FindMatchInfo> GetMatchInfo()
+    public List<MatchInfo> GetMatchInfo()
     {
         return matchInfos;
+    }
+
+    public bool IsRemoveType(RemoveType remover)
+    {
+        for(int i=0; i<matchInfos.Count; i++ )
+        {
+            if( matchInfos[i].Remover == remover )
+                return true;
+        }
+        return false;
     }
 
     public int FindMatches(Point2D[] poslist)
@@ -70,7 +79,7 @@ public class MatchingChecker
     - 패턴 데이터 검사
     - 결과는 매치와 매칭의 종류(new)
      */
-    private void FindMatchingTiles(int row, int col, FindMatchInfo findinfo)
+    private void FindMatchingTiles(int row, int col, MatchInfo findinfo)
     {
         Tile baseTile = _gamepanel.tiles[row, col];
         if (baseTile.IsChecked)
@@ -85,7 +94,7 @@ public class MatchingChecker
         FindMatch( row, col, findinfo, FindDirection.Vertical);
 
         if( findinfo.isMatch )
-            matchInfos.Add(new FindMatchInfo(findinfo));
+            matchInfos.Add(new MatchInfo(findinfo));
 
         findinfo.Reset();
     }
@@ -93,7 +102,7 @@ public class MatchingChecker
     delegate bool compareTile(int row, int col, int offset); // isSame~
     delegate  Tile getNeighborTile(int row, int col, int offset);
 
-    void FindMatch(int row, int col, FindMatchInfo findinfo, FindDirection dir)
+    void FindMatch(int row, int col, MatchInfo findinfo, FindDirection dir)
     {
         int num = 0;
         compareTile compareTile1;
@@ -140,6 +149,12 @@ public class MatchingChecker
         if(matchCandidates.Count >= 2)
         {
             findinfo.isMatch = true;
+
+            if (dir == FindDirection.Horizon)
+                findinfo.direction |= MatchDir.Horizon;
+            else
+                findinfo.direction |= MatchDir.Vertical;
+
             foreach (var tile in matchCandidates)
             {
                 if (tile.IsMatched == false)
@@ -147,22 +162,33 @@ public class MatchingChecker
                     findinfo.AddTilePosition(tile.GetLocation());
                     tile.MarkSearch();
                 }
+                else
+                {
+                    Debug.LogFormat("교차점[{0},{1}] 발견", tile.row, tile.col);
+                    // 이전 데이터와 합치기
+                    for(int i=0; i<matchInfos.Count; i++)
+                    {
+                        var oldInfo = matchInfos[i];
+                        if(oldInfo.Find(tile.row, tile.col))
+                        {
+                            findinfo.direction |= oldInfo.direction;
+                            findinfo.AddTilePosition(oldInfo);
+                            matchInfos.RemoveAt(i);
+                            break;
+                        }
+                    }
+                    
+                }
             }
-
-            // working
-            CheckRemover(findinfo, dir);
+            
+            // 이 부분을 함수 바깥으로 뺄 수 있나?
+            CheckRemover(findinfo);
         }
         matchCandidates.Clear();
     }
 
-    private static void CheckRemover(FindMatchInfo findinfo, FindDirection dir)
+    private static void CheckRemover(MatchInfo findinfo)
     {
-        // cross 매칭 확인
-        if (dir == FindDirection.Horizon)
-            findinfo.isHorizonMatch = true;
-        else
-            findinfo.isVerticalMatch = true;
-
         if (findinfo.isCrossMatch)
         {
             findinfo.Remover = RemoveType.Bomb;
@@ -172,18 +198,18 @@ public class MatchingChecker
         {
             if (findinfo.Length == 4)
             {
-                if (findinfo.isHorizonMatch)
+                if (findinfo.direction == MatchDir.Horizon)
                 {
                     findinfo.Remover = RemoveType.VerticalRemover;
                     Debug.LogFormat($"[Remover]{RemoveType.VerticalRemover.ToString()}");
                 }
-                else if (findinfo.isVerticalMatch)
+                else if (findinfo.direction == MatchDir.Vertical)
                 {
                     findinfo.Remover = RemoveType.HorizonRemover;
                     Debug.LogFormat($"[Remover]{RemoveType.HorizonRemover.ToString()}");
                 }
             }
-            else if (findinfo.Length == 5) // cross확인?
+            else if (findinfo.Length == 5) 
             {
                 findinfo.Remover = RemoveType.KindRemover;
                 Debug.LogFormat($"[Remover]타입지우기");
@@ -208,17 +234,16 @@ public class MatchingChecker
     }
 }
 
-public class FindMatchInfo
+public class MatchInfo
 {
     public MatchList matchlist;
 
     public bool isMatch = false;
 
-    public bool isHorizonMatch;
-    public bool isVerticalMatch;
+    public MatchDir direction;
 
     public bool isCrossMatch
-    { get { return isHorizonMatch && isVerticalMatch;}}
+    { get { return direction == MatchDir.Cross;}}
 
     // remover 생성 정보 필요
     public RemoveType Remover;
@@ -227,8 +252,8 @@ public class FindMatchInfo
 
     public void Reset()
     {
-        isHorizonMatch = false;
-        isVerticalMatch = false;
+
+        direction = MatchDir.None;
         matchlist.Clear();
         isMatch = false;
     }
@@ -243,6 +268,11 @@ public class FindMatchInfo
         matchlist.Add(pos);
     }
 
+    public void AddTilePosition(MatchInfo info)
+    {
+        matchlist.AddRange(info.matchlist);
+    }    
+
     public void RemoveLast()
     {
         matchlist.RemoveAt(matchlist.Count-1);
@@ -253,18 +283,27 @@ public class FindMatchInfo
         input = matchlist; // 내용을 복사
     }
 
-    public FindMatchInfo()
+    public MatchInfo()
     {
         matchlist = new MatchList();
     }
 
-    public FindMatchInfo(FindMatchInfo info)
+    public MatchInfo(MatchInfo info)
     {
         matchlist = new MatchList(info.matchlist);
         isMatch = info.isMatch;
-        isHorizonMatch = info.isHorizonMatch;
-        isVerticalMatch = info.isVerticalMatch;   
+        direction = info.direction;
         Remover = info.Remover;
+    }
+
+    public bool Find(int row, int col)
+    {
+        for( int i=0; i<matchlist.Count; i++)
+        {
+            if(matchlist[i].row == row && matchlist[i].col == col)
+                return true;
+        }
+        return false;
     }
 } 
 

@@ -29,6 +29,14 @@ namespace Match3
         Vertical
     }
 
+    public enum MatchDir
+    {
+        None,
+        Horizon,
+        Vertical,
+        Cross, // Hori && vertical
+    }    
+
     // GamePanel::TrySwapTile Function Result
     public enum SwapTileResult
     {

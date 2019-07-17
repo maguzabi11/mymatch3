@@ -251,6 +251,11 @@ namespace Match3
             _matchingChecker.OutputMatches();
         }
 
+        public bool IsExistRemover(RemoveType remover)
+        {
+            return _matchingChecker.IsRemoveType(remover);
+        }
+
         public void DeleteMatchTiles()
         {
             var output = new StringBuilder();

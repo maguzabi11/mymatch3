@@ -132,6 +132,8 @@ namespace Tests
             gp.CreateSpecificTilesforTest();
             int num = gp.NumMatchable(); // 각 매치에 대해 확인해야함.
             Debug.LogFormat($"matchable count: {num}");
+
+            Assert.That(num, Is.EqualTo(15));
         }
 
         [Test]
@@ -144,6 +146,32 @@ namespace Tests
 
             gp.OutputTiles();
                // Assert.That(false);
+        }
+
+        [Test]
+        public void 매치_Cross1()
+        {
+            //gp.CreateforMatchTileTestCase();
+            gp.CreateMatchWithCross();
+            gp.FindAllMatches(); // 움직여서 검사?
+
+            Assert.That(gp.IsExistRemover(RemoveType.Bomb));
+        }
+
+        [Test]
+        public void 매치_가로줄제거()
+        {
+            gp.CreateMatch4();
+            gp.FindAllMatches();
+            Assert.That(gp.IsExistRemover(RemoveType.HorizonRemover));
+        }
+
+        [Test]
+        public void 매치_세로줄제거()
+        {
+            gp.CreateMatch4();
+            gp.FindAllMatches();
+            Assert.That(gp.IsExistRemover(RemoveType.VerticalRemover));
         }
 
         //// A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use

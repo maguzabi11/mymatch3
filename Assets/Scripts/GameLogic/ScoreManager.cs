@@ -22,7 +22,7 @@ public class ScoreManager
         _score = 0;
     }
 
-    public int Calculate( List<FindMatchInfo> matches )
+    public int Calculate( List<MatchInfo> matches )
     {
         int pointBase = 10;
         int sum = 0;

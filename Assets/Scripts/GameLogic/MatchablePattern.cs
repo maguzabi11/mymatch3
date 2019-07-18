@@ -6,8 +6,9 @@ using UnityEngine;
 namespace Match3
 {
 
+// 검사용 패턴 클래스
 
-public class MatchablePattern
+public class MatchablePattern : PatternBase
 {
     private static MatchablePattern _intance;
     public static MatchablePattern Instance
@@ -24,9 +25,7 @@ public class MatchablePattern
         }
     }
 
-    private List<List<Point2D>> matchlist = new List<List<Point2D>>();
-
-    private void Init()
+    protected override void Init()
     {
         // 오른쪽 이동 시 만들 수 있는 패턴        
         var pattern1 = new List<Point2D>();
@@ -163,22 +162,6 @@ public class MatchablePattern
         // 16번 액세스
         //var pos = matchlist[15][0];
         //Debug.LogFormat($"{pos}");
-    }
-
-    public Point2D GetPattern(int pattern, int i)
-    {
-        return matchlist[pattern][i]; 
-    }
-
-    public Point2D GetPatternPos(int pattern, int i, int row, int col)
-    {
-        var calculatedPos = new Point2D(matchlist[pattern][i].row + row, matchlist[pattern][i].col + col);
-        return calculatedPos;
-    }  
-
-    public int Length
-    {
-        get { return matchlist.Count; }
     }
 
 }

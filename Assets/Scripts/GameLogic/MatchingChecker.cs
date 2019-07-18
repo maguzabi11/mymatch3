@@ -68,6 +68,8 @@ public class MatchingChecker
 
     private void ResetSearch()
     {
+        // matchInfos. 2by2일 때 문제가 됨.
+        // 리셋 하는 부분을 위치, 조건을 수정해야한다.
         matchInfos.Clear();
         _gamepanel.ResetSearch();
         findinfo.Reset();
@@ -216,6 +218,72 @@ public class MatchingChecker
             }
         }
     }
+
+    // 1. swap 가능 확인 용
+    public bool IsMatch2by2(int row, int col)
+    {
+        var curtile = _gamepanel.tiles[row, col];
+        if( curtile == null) return false;
+
+        bool isFound = false;
+        var pattern = Square22Pattern.Instance; // 추후 패턴 일반화
+        for(int p=0; p<pattern.Length; p++)
+        {
+            int nblock = pattern.GetPatternLength(p);
+            int i=0;
+            for(; i<nblock; i++)
+            {
+                var tilepos = pattern.GetPatternPos(p, i, row, col);
+
+                if( _gamepanel.Isbound(tilepos) == false )
+                    break;
+
+                var tile = _gamepanel.tiles[tilepos.row, tilepos.col];
+                if(tile == null || tile.Type != curtile.Type)
+                    break;
+
+                findinfo.AddTilePosition(tilepos);
+            }
+
+            isFound = (i == nblock);
+            if(isFound)
+            {
+                findinfo.AddTilePosition(curtile.GetLocation());
+                findinfo.Remover = RemoveType.Butterfly;
+                findinfo.isMatch = true;
+                
+                // 생성위치도 필요
+                matchInfos.Add(new MatchInfo(findinfo));
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // GamePanel에서 옮겨옴
+    public bool IsMatchablePlace(int row, int col, int type)
+    {
+        var pattern = MatchablePattern.Instance;
+        // 패턴 쪽으로 이동할듯
+        for(int p=0; p<pattern.Length; p++)
+        {
+            var point1 = pattern.GetPatternPos(p, 0, row, col);
+            var point2 = pattern.GetPatternPos(p, 1, row, col);
+            if( _gamepanel.Isbound(point1) && _gamepanel.Isbound(point2))
+            {
+                var tile1 = _gamepanel.tiles[point1.row, point1.col];
+                var tile2 = _gamepanel.tiles[point2.row, point2.col];
+                if(tile1 == null || tile2 == null )
+                    continue;
+
+                // 모두 같은 타입인지 확인 (코드가 길다...)
+                if(type == tile1.Type &&
+                    type == tile2.Type)
+                    return true;
+            }                    
+        }
+        return false;
+    }    
 
     public void OutputMatches()
     {

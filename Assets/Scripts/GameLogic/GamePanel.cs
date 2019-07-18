@@ -150,31 +150,6 @@ namespace Match3
 
         }
 
-        // helper 
-        public bool IsSameLeft(int row, int col, int offset)
-        {
-            int left = col - 1 - offset;
-            return (left >= 0 && tiles[row, col].Type == tiles[row, left].Type);
-        }
-
-        public bool IsSameRight(int row, int col, int offset)
-        {
-            int right = col + 1 + offset;
-            return (right < numCol && tiles[row, col].Type == tiles[row, right].Type);
-        }
-
-        public bool IsSameUp(int row, int col, int offset)
-        {
-            int up = row - 1 - offset;
-            return (up >= 0 && tiles[row, col].Type == tiles[up, col].Type);
-        }
-
-        public bool IsSameDown(int row, int col, int offset)
-        {
-            int down = row + 1 + offset;
-            return (down < numRow && tiles[row, col].Type == tiles[down, col].Type);
-        }
-
         public Tile GetLeftTile(int row, int col, int offset)
         {
             int left = col - 1 - offset;
@@ -194,7 +169,19 @@ namespace Match3
         {
             int down = row + 1 + offset;
             return (down < numRow) ? tiles[down, col] : null;
-        }                        
+        }
+
+        public bool IsSwapable(int row, int col) // 두 지점을 받는 형태 고려...
+        {
+            // 1. 선형매치
+            // 2. 2x2
+            return IsMatch3Tile(row, col) || _matchingChecker.IsMatch2by2(row, col);
+        }
+
+        public bool IsMatch2by2(int row, int col)
+        {
+            return _matchingChecker.IsMatch2by2(row, col);
+        }
 
         public bool IsMatch3Tile(int row, int col)
         {
@@ -227,6 +214,31 @@ namespace Match3
             }
 
             return false;
+        }
+
+        // helper 
+        public bool IsSameLeft(int row, int col, int offset)
+        {
+            int left = col - 1 - offset;
+            return (left >= 0 && tiles[row, col].Type == tiles[row, left].Type);
+        }
+
+        public bool IsSameRight(int row, int col, int offset)
+        {
+            int right = col + 1 + offset;
+            return (right < numCol && tiles[row, col].Type == tiles[row, right].Type);
+        }
+
+        public bool IsSameUp(int row, int col, int offset)
+        {
+            int up = row - 1 - offset;
+            return (up >= 0 && tiles[row, col].Type == tiles[up, col].Type);
+        }
+
+        public bool IsSameDown(int row, int col, int offset)
+        {
+            int down = row + 1 + offset;
+            return (down < numRow && tiles[row, col].Type == tiles[down, col].Type);
         }
 
         // 매칭 타일 찾기
@@ -492,7 +504,7 @@ namespace Match3
             tiles[srcPos.row,srcPos.col] = dst;
             tiles[dstPos.row,dstPos.col] = src;
 
-            bool isMatch = (IsMatch3Tile(srcPos.row, srcPos.col) || IsMatch3Tile(dstPos.row, dstPos.col));
+            bool isMatch = (IsSwapable(srcPos.row, srcPos.col) || IsSwapable(dstPos.row, dstPos.col));
             //  위 함수 대신 매치 정보를 포함하는
 
             src.MoveSwap(dst, !isMatch);
@@ -503,7 +515,7 @@ namespace Match3
                 int cntMatch = _matchingChecker.FindMatches( new Point2D[] {srcPos, dstPos} );
                 src.SwapLocation(dst);
                 // 필요한 경우 시그널 생성
-                Debug.LogFormat("매치!");
+                Debug.LogFormat($"매치! ({cntMatch})");
                 return true;
             }
             else
@@ -606,7 +618,7 @@ namespace Match3
             if(_nSendDropSignal == 0)
             {
                 Debug.LogFormat("다시 매치 검사하기");
-                if( FindAllMatches() > 0)
+                if( FindAllMatches() > 0) // TODO: 전체가 아니라 Drop한 것 중심으로 검사
                     DeleteMatchTiles();
                 else 
                     TileInput.blockInput = false; // 의존 문제 고려

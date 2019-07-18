@@ -46,11 +46,11 @@ namespace Tests
         }
 
         [Test]
-        public void 매치발생확인()
+        public void 교환할_수_있는가()
         {
             gp.CreateSpecificTilesforTest();
-            Assert.IsFalse(gp.IsMatch3Tile(0, 2));
-            Assert.IsTrue(gp.IsMatch3Tile(1, 0));
+            Assert.IsFalse(gp.IsSwapable(0, 2));
+            Assert.IsTrue(gp.IsSwapable(1, 0));
         }
 
         [Test]
@@ -86,7 +86,7 @@ namespace Tests
             gp.CreateSpecificTilesforTest();
             gp.FindAllMatches();
             gp.DeleteMatchTiles(); // 일련의 과정 중 하나
-            gp.OutputTiles();
+
             gp.FillTilesToEmptyPlace();
             gp.OutputTiles();
             Assert.That(gp.tiles[3,0].Type, Is.EqualTo(3));
@@ -104,8 +104,6 @@ namespace Tests
         {
             gp.CreateSpecificTilesforTest();
             Assert.That(gp.TrySwapTile(gp.tiles[0,2], TileMovement.Down), Is.EqualTo(SwapTileResult.Success));
-            // gp.DeleteMatchTiles();
-            // gp.OutputTiles();
         }
 
         [Test]
@@ -151,8 +149,8 @@ namespace Tests
         [Test]
         public void 매치_Cross1()
         {
-            //gp.CreateforMatchTileTestCase();
-            gp.CreateMatchWithCross();
+            gp.CreateforMatchTileTestCase(); // '+'형
+            //gp.CreateMatchWithCross(); // 'ㄱ'형
             gp.FindAllMatches(); // 움직여서 검사?
 
             Assert.That(gp.IsExistRemover(RemoveType.Bomb));
@@ -172,6 +170,14 @@ namespace Tests
             gp.CreateMatch4();
             gp.FindAllMatches();
             Assert.That(gp.IsExistRemover(RemoveType.VerticalRemover));
+        }
+
+        [Test]
+        public void 매치_2by2()
+        {
+            gp.CreateMatchSqure22();
+            gp.IsMatch2by2(0, 3);
+            Assert.That(gp.IsExistRemover(RemoveType.Butterfly));            
         }
 
         //// A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use

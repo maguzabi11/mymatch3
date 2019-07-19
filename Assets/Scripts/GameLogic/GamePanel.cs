@@ -271,39 +271,41 @@ namespace Match3
 
         public void DeleteMatchTiles()
         {
-            //ResetFindPropertyForTiles();
-
             var output = new StringBuilder();
 
             _nSendDeleteSignal = 0;
             var matches = _matchingChecker.GetMatchInfo();
-            for(int i=0; i<matches.Count; i++)
+            for (int i = 0; i < matches.Count; i++)
             {
                 MatchList list = matches[i].matchlist;
                 output.AppendFormat($"{i}:");
-                foreach(Point2D pos in list)
+                foreach (Point2D pos in list)
                 {
                     var tile = tiles[pos.row, pos.col];
                     _signalBus.Fire(new TileDeleteSignal(tile));
-                    _nSendDeleteSignal++;
 
+                    // 이제 타일의 효과를 발동시켜야 한다.
+                    // 영향받는 타일들이 중복될 수 있음 고려할 것
+
+                    _nSendDeleteSignal++;
                     tiles[pos.row, pos.col] = null;
 
                     output.AppendFormat($"[{pos.row},{pos.col}]");
                 }
             }
 
-            // test
-            if( matches.Count > 0)
+            if (matches.Count > 0)
             {
                 Debug.LogFormat(output.ToString());
-
-                int getPoint = _scoreManager.Calculate(matches);
-                Debug.LogFormat($"Point:{getPoint}");
-                Debug.LogFormat($"Score:{_scoreManager.Score}");
+                CalculateScore(matches);
             }
+        }
 
-            //_matchingChecker.ResetSearch(); // 호출 주의
+        private void CalculateScore(List<MatchInfo> matches)
+        {
+            int getPoint = _scoreManager.Calculate(matches);
+            Debug.LogFormat($"Point:{getPoint}");
+            Debug.LogFormat($"Score:{_scoreManager.Score}");
         }
 
         private bool IsEmptyPlace(int x, int y)

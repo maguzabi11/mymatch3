@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Match3
 {
     // 매칭 조건에 의해 생성되는 타일의 종류
-    public enum RemoveType
+    public enum RemoveType // MatchType이기도 하다
     {
         Normal,
         Butterfly,

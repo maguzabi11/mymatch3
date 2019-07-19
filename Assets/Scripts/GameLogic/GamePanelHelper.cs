@@ -86,6 +86,14 @@ namespace Match3
             CreateTileRow( gamepanel, 1, new int[]{3,3,4,1,1});
             CreateTileRow( gamepanel, 2, new int[]{2,2,4,3,5});
             CreateTileRow( gamepanel, 3, new int[]{2,2,1,2,5});
+        }
+
+        public static void CreateMatchSqure22_and_3(this GamePanel gamepanel)
+        {
+            CreateTileRow( gamepanel, 0, new int[]{4,4,2,1,1});
+            CreateTileRow( gamepanel, 1, new int[]{3,3,4,1,1});
+            CreateTileRow( gamepanel, 2, new int[]{3,2,4,3,1});
+            CreateTileRow( gamepanel, 3, new int[]{2,5,1,2,5});
         }        
     }
 

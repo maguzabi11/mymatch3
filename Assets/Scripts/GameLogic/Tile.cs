@@ -28,13 +28,13 @@ public class Tile
         get {return nfound > 0;}
     }
 
-    public void MarkSearch()
+    public void MarkFound()
     {
         IsChecked = true;
         nfound++;
     }
 
-    public void ResetSearch()
+    public void ResetFound()
     {
         IsChecked = false;
         nfound = 0;        

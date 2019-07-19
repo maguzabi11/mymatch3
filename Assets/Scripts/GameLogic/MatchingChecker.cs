@@ -66,13 +66,13 @@ public class MatchingChecker
         return matchInfos.Count;
     }
 
-    private void ResetSearch()
+    public void ResetSearch()
     {
         // matchInfos. 2by2일 때 문제가 됨.
         // 리셋 하는 부분을 위치, 조건을 수정해야한다.
-        matchInfos.Clear();
-        _gamepanel.ResetSearch();
+        _gamepanel.ResetFindPropertyForTiles();
         findinfo.Reset();
+        matchInfos.Clear();
     }
 
     
@@ -94,9 +94,10 @@ public class MatchingChecker
 
         FindMatch( row, col, findinfo, FindDirection.Horizon);
         FindMatch( row, col, findinfo, FindDirection.Vertical);
-
         if( findinfo.isMatch )
             matchInfos.Add(new MatchInfo(findinfo));
+        else        
+            IsMatch2by2(row, col);
 
         findinfo.Reset();
     }
@@ -110,10 +111,10 @@ public class MatchingChecker
         compareTile compareTile1;
         compareTile compareTile2;
         getNeighborTile getTile1;
-        getNeighborTile getTile2;            
-        if( dir == FindDirection.Horizon)
+        getNeighborTile getTile2;
+        if (dir == FindDirection.Horizon)
         {
-            num = _gamepanel.NumCol-1;
+            num = _gamepanel.NumCol - 1;
             compareTile1 = _gamepanel.IsSameLeft;
             compareTile2 = _gamepanel.IsSameRight;
             getTile1 = _gamepanel.GetLeftTile;
@@ -121,7 +122,7 @@ public class MatchingChecker
         }
         else
         {
-            num = _gamepanel.NumRow-1;
+            num = _gamepanel.NumRow - 1;
             compareTile1 = _gamepanel.IsSameUp;
             compareTile2 = _gamepanel.IsSameDown;
             getTile1 = _gamepanel.GetUpTile;
@@ -133,60 +134,97 @@ public class MatchingChecker
         bool bStopRight = false;
         for (int i = 0; i < num; i++)
         {
-            if(!bStopLeft && compareTile1(row, col, i))
+            if (!bStopLeft && compareTile1(row, col, i))
                 matchCandidates.Add(getTile1(row, col, i));
-            else if(bStopRight)
+            else if (bStopRight)
                 break;
             else
                 bStopLeft = true;
- 
-            if(!bStopRight && compareTile2(row, col, i))
+
+            if (!bStopRight && compareTile2(row, col, i))
                 matchCandidates.Add(getTile2(row, col, i));
-            else if(bStopLeft)
+            else if (bStopLeft)
                 break;
-            else   
-                bStopRight = true;
-        } 
-        
-        if(matchCandidates.Count >= 2)
-        {
-            findinfo.isMatch = true;
-
-            if (dir == FindDirection.Horizon)
-                findinfo.direction |= MatchDir.Horizon;
             else
-                findinfo.direction |= MatchDir.Vertical;
+                bStopRight = true;
+        }
+        
+        if (matchCandidates.Count >= 2)
+            makeMatch(findinfo, dir, matchCandidates);
+        matchCandidates.Clear();
+    }
 
-            foreach (var tile in matchCandidates)
+    // 발견된 매치 타일로 새로운 매치 정보 만들기
+    private void makeMatch(MatchInfo findinfo, FindDirection dir, List<Tile> matchCandidates)
+    {
+        // 버그: 이제는 무조건 매치를 하면 안되고
+        //  타일이 이미 만들어진 것과 겹친 부분이 있으면 
+        //  우선 순위에 따라 어떻게 처리할지가 결정되어야 한다.
+        findinfo.isMatch = true;
+
+        if (dir == FindDirection.Horizon)
+            findinfo.direction |= MatchDir.Horizon;
+        else
+            findinfo.direction |= MatchDir.Vertical;
+
+        foreach (var tile in matchCandidates)
+        {
+            if (tile.IsMatched == false)
             {
-                if (tile.IsMatched == false)
+                findinfo.AddTilePosition(tile.GetLocation());
+                tile.MarkFound();
+            }
+            else
+                mergeMachedInfo(findinfo, tile);
+        }
+
+        // 이 부분을 함수 바깥으로 뺄 수 있나?
+        CheckRemover(findinfo);
+    }
+
+    // 이미 매치된 타일에 대한 처리 과정
+    private void mergeMachedInfo(MatchInfo findinfo, Tile tile)
+    {
+        // 해당 매치를 찾아, 이전 데이터와 합치기               
+        for (int i = 0; i < matchInfos.Count; i++)
+        {
+            var oldInfo = matchInfos[i];
+            if (oldInfo.Find(tile.row, tile.col))
+            {
+                Debug.LogFormat("교차점[{0},{1}] 발견", tile.row, tile.col);
+                if (oldInfo.Remover == RemoveType.Normal)
                 {
-                    findinfo.AddTilePosition(tile.GetLocation());
-                    tile.MarkSearch();
+                    findinfo.direction |= oldInfo.direction;
+                    findinfo.AddTilePosition(oldInfo);
+                    matchInfos.RemoveAt(i);
+                    break;
                 }
-                else
+                else if (oldInfo.Remover == RemoveType.Butterfly)
                 {
-                    Debug.LogFormat("교차점[{0},{1}] 발견", tile.row, tile.col);
-                    // 이전 데이터와 합치기
-                    for(int i=0; i<matchInfos.Count; i++)
-                    {
-                        var oldInfo = matchInfos[i];
-                        if(oldInfo.Find(tile.row, tile.col))
-                        {
-                            findinfo.direction |= oldInfo.direction;
-                            findinfo.AddTilePosition(oldInfo);
-                            matchInfos.RemoveAt(i);
-                            break;
-                        }
-                    }
-                    
+                    // TODO: oldInfo.matchlist 가리키는 타일 속성을 리셋하기
+                    Debug.LogFormat("나비 발견. 나비 제거");
+                    findinfo.AddTilePosition(tile.GetLocation());
+                    matchInfos.RemoveAt(i);
+                    break;
                 }
             }
-            
-            // 이 부분을 함수 바깥으로 뺄 수 있나?
-            CheckRemover(findinfo);
         }
-        matchCandidates.Clear();
+    }
+
+    private MatchInfo findMatchInfo(int row, int col)
+    {
+        // row, col가 들어있는 매치 정보는 중복하지 않는다고 가정
+        MatchInfo match = null;
+        for (int i = 0; i < matchInfos.Count; i++)
+        {
+            if (matchInfos[i].Find(row, col))
+            {
+                match = matchInfos[i];
+                break;
+            }
+        }
+
+        return match;
     }
 
     private static void CheckRemover(MatchInfo findinfo)
@@ -219,8 +257,17 @@ public class MatchingChecker
         }
     }
 
+    // useMatchinfo: true일 때 테스트 용도로 사용
+    public bool IsMatch2by2(int row, int col, bool useMatchinfo)
+    {
+        if( useMatchinfo )
+            findinfo.AddTilePosition(row, col);
+        return IsMatch2by2Simple(row, col, useMatchinfo ? findinfo : null);
+    }
+
     // 1. swap 가능 확인 용
-    public bool IsMatch2by2(int row, int col)
+    // 2. 매치 정보 기록 유무 필요
+    private bool IsMatch2by2Simple(int row, int col, MatchInfo matchinfo)
     {
         var curtile = _gamepanel.tiles[row, col];
         if( curtile == null) return false;
@@ -242,20 +289,73 @@ public class MatchingChecker
                 if(tile == null || tile.Type != curtile.Type)
                     break;
 
-                findinfo.AddTilePosition(tilepos);
+                if( matchinfo != null)
+                    matchinfo.AddTilePosition(tilepos); // 패턴이 모두 맞아야 추가가 가능함...
             }
 
             isFound = (i == nblock);
             if(isFound)
             {
-                findinfo.AddTilePosition(curtile.GetLocation());
-                findinfo.Remover = RemoveType.Butterfly;
-                findinfo.isMatch = true;
-                
-                // 생성위치도 필요
-                matchInfos.Add(new MatchInfo(findinfo));
+                if( matchinfo != null )
+                {
+                    // todo : 일반화를 위해서는 함수로 빼야함.
+                    //matchinfo.AddTilePosition(curtile.GetLocation());
+                    matchinfo.Remover = RemoveType.Butterfly;
+                    matchinfo.isMatch = true;
+                    // 생성위치도 필요
+                    matchInfos.Add(new MatchInfo(matchinfo));                    
+                }
                 return true;
             }
+        }
+        return false;
+    }
+
+    //
+    private bool IsMatch2by2(int row, int col)
+    {
+        var curtile = _gamepanel.tiles[row, col];
+        if( curtile == null) return false;
+
+        List<Tile> matchCandidates = new List<Tile>();
+        bool isFound = false;
+        var pattern = Square22Pattern.Instance; // 추후 패턴 일반화
+        for(int p=0; p<pattern.Length; p++)
+        {
+            int nblock = pattern.GetPatternLength(p);
+            int i=0;
+            for(; i<nblock; i++)
+            {
+                var tilepos = pattern.GetPatternPos(p, i, row, col);
+                if( _gamepanel.Isbound(tilepos) == false )
+                    break;
+
+                var tile = _gamepanel.tiles[tilepos.row, tilepos.col];
+                if(tile == null || tile.Type != curtile.Type || tile.IsMatched)
+                    break;
+
+                matchCandidates.Add(tile); // 패턴이 모두 맞아야 추가가 가능함...
+            }
+
+            isFound = (i == nblock);
+            if(isFound)
+            {
+                foreach (var tile in matchCandidates)
+                {
+                    findinfo.AddTilePosition(tile.GetLocation());
+                    tile.MarkFound();
+                }
+
+                findinfo.Remover = RemoveType.Butterfly;
+                findinfo.isMatch = true;
+
+                // 생성위치도 필요
+                matchInfos.Add(new MatchInfo(findinfo));
+                
+                matchCandidates.Clear();
+                return true;
+            }            
+            matchCandidates.Clear();
         }
         return false;
     }
@@ -320,7 +420,6 @@ public class MatchInfo
 
     public void Reset()
     {
-
         direction = MatchDir.None;
         matchlist.Clear();
         isMatch = false;

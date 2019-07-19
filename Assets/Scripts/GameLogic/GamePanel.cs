@@ -175,12 +175,12 @@ namespace Match3
         {
             // 1. 선형매치
             // 2. 2x2
-            return IsMatch3Tile(row, col) || _matchingChecker.IsMatch2by2(row, col);
+            return IsMatch3Tile(row, col) || _matchingChecker.IsMatch2by2(row, col, useMatchinfo: false);
         }
 
         public bool IsMatch2by2(int row, int col)
         {
-            return _matchingChecker.IsMatch2by2(row, col);
+            return _matchingChecker.IsMatch2by2(row, col, useMatchinfo: true);
         }
 
         public bool IsMatch3Tile(int row, int col)
@@ -249,12 +249,13 @@ namespace Match3
             return _matchingChecker.FindAllMatches();
         }
 
-        public void ResetSearch()
+        public void ResetFindPropertyForTiles()
         {
             // 검사 속성 리셋
             for (int i = 0; i < numRow; i++)
                 for (int j = 0; j < numCol; j++)
-                    tiles[i, j].ResetSearch();
+                    if(tiles[i, j] != null)
+                        tiles[i, j].ResetFound();
         }
 
    
@@ -270,6 +271,8 @@ namespace Match3
 
         public void DeleteMatchTiles()
         {
+            //ResetFindPropertyForTiles();
+
             var output = new StringBuilder();
 
             _nSendDeleteSignal = 0;
@@ -300,6 +303,7 @@ namespace Match3
                 Debug.LogFormat($"Score:{_scoreManager.Score}");
             }
 
+            //_matchingChecker.ResetSearch(); // 호출 주의
         }
 
         private bool IsEmptyPlace(int x, int y)
@@ -522,23 +526,11 @@ namespace Match3
             {
                 tiles[srcPos.row,srcPos.col] = src;
                 tiles[dstPos.row,dstPos.col] = dst;
-                Debug.LogFormat("교환하지 않음. yoyo 발생");
+                //Debug.LogFormat("교환하지 않음. yoyo 발생");
                 return false;
             }            
         }
 
-        public bool IsInRangeWidth(int i)
-        {
-            return (i>=0) && (i<numRow);
-        }
-        public bool IsInRangeHeigth(int i)
-        {
-            return (i>=0) && (i<numCol);
-        }
-
-        // 3. 특정 타일 제거
-        // - 매칭 타일
-        // - 가로 세로 라인 제거
 
          // todo 
         // - tile pool 필요
@@ -595,7 +587,7 @@ namespace Match3
         
 
         ///
-        #region 시그널 처리 함수
+        #region 시그널 처리 함수, 모든 이벤트가 처리되는 것을 확인 하기 위함
         int _nSendDeleteSignal;
         int _nSendDropSignal;
 

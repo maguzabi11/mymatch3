@@ -180,6 +180,15 @@ namespace Tests
             Assert.That(gp.IsExistRemover(RemoveType.Butterfly));            
         }
 
+       [Test]
+        public void 매치_2by2And3withFindAll()
+        {
+            gp.CreateMatchSqure22_and_3();
+            gp.FindAllMatches();
+            Assert.That(gp.IsExistRemover(RemoveType.Butterfly));            
+            gp.DeleteMatchTiles();
+        }        
+
         //// A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use
         //// `yield return null;` to skip a frame.
         //[UnityTest]

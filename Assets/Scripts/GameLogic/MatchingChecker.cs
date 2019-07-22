@@ -4,10 +4,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
+using MatchList = System.Collections.Generic.List<Match3.Point2D>;
 
 namespace Match3
 {
-    using MatchList = List<Point2D>;
 
 /*
    - Gamepanel에서 역할 분리로 시작.
@@ -94,8 +94,8 @@ public class MatchingChecker
         FindMatch( row, col, findinfo, FindDirection.Vertical);
         if( findinfo.isMatch )
             matchInfos.Add(new MatchInfo(findinfo));
-        else        
-            IsMatch2by2(row, col);
+                
+        IsMatch2by2(row, col); // 확정되지 않은 코드 (검증이 필요한 부분)
 
         findinfo.Reset();
     }
@@ -191,18 +191,26 @@ public class MatchingChecker
         if (matchedInfo.Find(tile.row, tile.col))
         {
             Debug.LogFormat("교차점[{0},{1}] 발견", tile.row, tile.col);
-            if (matchedInfo.Remover == RemoveType.Normal)
+            
+            if (matchedInfo.isLinearMatch) // 교차되면서 매치를 하나로 합치기
             {
                 findinfo.direction |= matchedInfo.direction;
                 findinfo.AddTilePosition(matchedInfo);
                 matchInfos.Remove(matchedInfo);
             }
+            // 타일 위치의 중복을 허용하면서 현재는 이에 대한 검증이 안되어 있음.
             else if (matchedInfo.Remover == RemoveType.Butterfly)
             {
-                Debug.LogFormat("나비 발견. 나비 제거");
-                resetMatchedInfo(matchedInfo); // matchedInfo.matchlist 가리키는 타일 속성을 리셋하기
+                Debug.LogFormat("나비 발견.");
                 findinfo.AddTilePosition(tile.GetLocation());
-                matchInfos.Remove(matchedInfo);
+
+                // 나비 제거 (취소함)
+                //resetMatchedInfo(matchedInfo);
+                //matchInfos.Remove(matchedInfo);
+            }
+            else
+            {
+                findinfo.AddTilePosition(tile.GetLocation());
             }
         }
     }
@@ -233,6 +241,8 @@ public class MatchingChecker
     {
         if (findinfo.isCrossMatch)
         {
+            // 레퍼런스 확인이 필요
+            // 크로스지만 개수가 6개가 넘는다면 폭탄이 아닌 파인애플로 만들어지는지 
             findinfo.Remover = RemoveType.Bomb;
             Debug.LogFormat($"[Remover] {RemoveType.Bomb.ToString()}생성");
         }
@@ -403,78 +413,6 @@ public class MatchingChecker
         }
     }
 }
-
-public class MatchInfo
-{
-    public MatchList matchlist;
-
-    public bool isMatch = false;
-
-    public MatchDir direction;
-
-    public bool isCrossMatch
-    { get { return direction == MatchDir.Cross;}}
-
-    // remover 생성 정보 필요
-    public RemoveType Remover;
-
-    public int Length { get { return matchlist.Count; } }
-
-    public void Reset()
-    {
-        direction = MatchDir.None;
-        matchlist.Clear();
-        isMatch = false;
-    }
-
-    public void AddTilePosition(int x, int y)
-    {
-        matchlist.Add(new Point2D(x, y));
-    }
-
-    public void AddTilePosition(Point2D pos)
-    {
-        matchlist.Add(pos);
-    }
-
-    public void AddTilePosition(MatchInfo info)
-    {
-        matchlist.AddRange(info.matchlist);
-    }    
-
-    public void RemoveLast()
-    {
-        matchlist.RemoveAt(matchlist.Count-1);
-    }
-
-    public void CopyMatchList( MatchList input )
-    {
-        input = matchlist; // 내용을 복사
-    }
-
-    public MatchInfo()
-    {
-        matchlist = new MatchList();
-    }
-
-    public MatchInfo(MatchInfo info)
-    {
-        matchlist = new MatchList(info.matchlist);
-        isMatch = info.isMatch;
-        direction = info.direction;
-        Remover = info.Remover;
-    }
-
-    public bool Find(int row, int col)
-    {
-        for( int i=0; i<matchlist.Count; i++)
-        {
-            if(matchlist[i].row == row && matchlist[i].col == col)
-                return true;
-        }
-        return false;
-    }
-} 
 
 
 }

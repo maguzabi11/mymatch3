@@ -24,6 +24,7 @@ namespace Tests
             Container.DeclareSignal<TileDeleteSignal>().OptionalSubscriber();  
             Container.DeclareSignal<FillTileSignal>().OptionalSubscriber();
             Container.DeclareSignal<TileDropSignal>();
+            Container.DeclareSignal<SpecialTileCreateSignal>();
 
             Container.BindFactory<UnityEngine.Object, TileInput, TileInput.Factory>()
                 .FromFactory<TileInputFactory>()
@@ -67,7 +68,7 @@ namespace Tests
         {
             gp.CreateSpecificTilesforTest();
             gp.FindAllMatches();
-            gp.DeleteMatchTiles(); // 일련의 과정 중 하나
+            gp.ProcessMatchTiles(); // 일련의 과정 중 하나
             gp.OutputTiles();
         }
 
@@ -85,7 +86,7 @@ namespace Tests
         {
             gp.CreateSpecificTilesforTest();
             gp.FindAllMatches();
-            gp.DeleteMatchTiles(); // 일련의 과정 중 하나
+            gp.ProcessMatchTiles(); // 일련의 과정 중 하나
 
             gp.FillTilesToEmptyPlace();
             gp.OutputTiles();
@@ -111,7 +112,7 @@ namespace Tests
         {
             gp.CreateSpecificTilesforTest();
             Assert.That(gp.TrySwapTile(gp.tiles[1,4], TileMovement.Down), Is.EqualTo(SwapTileResult.Success));
-            gp.DeleteMatchTiles();
+            gp.ProcessMatchTiles();
             gp.OutputTiles();
         }
 
@@ -120,7 +121,7 @@ namespace Tests
         {
             gp.CreateforMatchTileTestCase();
             gp.FindAllMatches();
-            gp.DeleteMatchTiles();
+            gp.ProcessMatchTiles();
             //gp.OutputTiles();
         }
 
@@ -139,7 +140,7 @@ namespace Tests
         {
             gp.CreateNotMatchableCaseAfterDelete();
             gp.FindAllMatches();
-            gp.DeleteMatchTiles(); // 일련의 과정 중 하나
+            gp.ProcessMatchTiles(); // 일련의 과정 중 하나
             gp.FillTilesToEmptyPlace();
 
             gp.OutputTiles();
@@ -186,7 +187,7 @@ namespace Tests
             gp.CreateMatchSqure22_and_3();
             gp.FindAllMatches();
             Assert.That(gp.IsExistRemover(RemoveType.Butterfly));            
-            gp.DeleteMatchTiles();
+            gp.ProcessMatchTiles();
         }        
 
         //// A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use

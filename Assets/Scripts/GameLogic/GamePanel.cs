@@ -23,8 +23,6 @@ namespace Match3
         public int GetLastIndexRow() { return numRow -1; }
         public int GetLastIndexCol() { return numCol -1; }
 
-        //List<MatchList> matches = new List<MatchList>();
-
         List<int> typeList = new List<int> {1,2,3,4,5};
 
         [Inject]
@@ -47,6 +45,7 @@ namespace Match3
             _signalBus = signalBus;
             _signalBus.Subscribe<FillTileSignal>(OnFillTileSignal);
             _signalBus.Subscribe<TileDropSignal>(OnTileDropSignal);
+            _signalBus.Subscribe<SpecialTileCreateSignal>(OnSpecialTileCreateSignal);
         }
 
         public GamePanel()
@@ -269,11 +268,14 @@ namespace Match3
             return _matchingChecker.IsRemoveType(remover);
         }
 
-        public void DeleteMatchTiles()
+        public void ProcessMatchTiles()
         {
             var output = new StringBuilder();
 
-            _nSendDeleteSignal = 0;
+            // 특수 매치로 인한 타일 생성과 매치3 삭제 시그널이 별도로
+            // 취급되면서 처리순서와 시그널 동기화 이슈가 발생.
+
+            _nSendDeleteSignal = 0; // 생성과 제거가 공동으로 처리될 예정
             var matches = _matchingChecker.GetMatchInfo();
             for (int i = 0; i < matches.Count; i++)
             {
@@ -282,6 +284,9 @@ namespace Match3
                 foreach (Point2D pos in list)
                 {
                     var tile = tiles[pos.row, pos.col];
+                    if( tile == null )
+                        continue;
+
                     _signalBus.Fire(new TileDeleteSignal(tile));
 
                     // 이제 타일의 효과를 발동시켜야 한다.
@@ -613,10 +618,15 @@ namespace Match3
             {
                 Debug.LogFormat("다시 매치 검사하기");
                 if( FindAllMatches() > 0) // TODO: 전체가 아니라 Drop한 것 중심으로 검사
-                    DeleteMatchTiles();
+                    ProcessMatchTiles();
                 else 
                     TileInput.blockInput = false; // 의존 문제 고려
             }
+        }
+
+        private void OnSpecialTileCreateSignal(SpecialTileCreateSignal signal)
+        {
+
         }
 
         #endregion

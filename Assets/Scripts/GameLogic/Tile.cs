@@ -159,7 +159,7 @@ public class Tile
                 .OnComplete( () => {
                         //TileInput.blockInput = false; // FIX: 좀 더 후에 풀어야 함.
                         Debug.Log("교환 애니 종료");
-                        gp.DeleteMatchTiles();
+                        gp.ProcessMatchTiles();
                     });
         }
         else

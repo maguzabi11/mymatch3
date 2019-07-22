@@ -27,6 +27,16 @@ public class TileDeleteSignal
     }
 }
 
+public class SpecialTileCreateSignal
+{
+    public MatchInfo match;
+
+    public SpecialTileCreateSignal(MatchInfo match)
+    {
+        this.match = match;
+    }
+}
+
 public class FillTileSignal
 {}
 

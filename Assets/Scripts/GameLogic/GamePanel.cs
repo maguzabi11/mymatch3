@@ -263,7 +263,7 @@ namespace Match3
             _matchingChecker.OutputMatches();
         }
 
-        public bool IsExistRemover(RemoveType remover)
+        public bool IsExistRemover(MatchType remover)
         {
             return _matchingChecker.IsRemoveType(remover);
         }

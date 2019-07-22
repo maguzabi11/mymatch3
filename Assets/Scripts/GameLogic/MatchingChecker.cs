@@ -35,7 +35,7 @@ public class MatchingChecker
         return matchInfos;
     }
 
-    public bool IsRemoveType(RemoveType remover)
+    public bool IsRemoveType(MatchType remover)
     {
         for(int i=0; i<matchInfos.Count; i++ )
         {
@@ -199,7 +199,7 @@ public class MatchingChecker
                 matchInfos.Remove(matchedInfo);
             }
             // 타일 위치의 중복을 허용하면서 현재는 이에 대한 검증이 안되어 있음.
-            else if (matchedInfo.Remover == RemoveType.Butterfly)
+            else if (matchedInfo.Remover == MatchType.Butterfly)
             {
                 Debug.LogFormat("나비 발견.");
                 findinfo.AddTilePosition(tile.GetLocation());
@@ -243,8 +243,8 @@ public class MatchingChecker
         {
             // 레퍼런스 확인이 필요
             // 크로스지만 개수가 6개가 넘는다면 폭탄이 아닌 파인애플로 만들어지는지 
-            findinfo.Remover = RemoveType.Bomb;
-            Debug.LogFormat($"[Remover] {RemoveType.Bomb.ToString()}생성");
+            findinfo.Remover = MatchType.Bomb;
+            Debug.LogFormat($"[Remover] {MatchType.Bomb.ToString()}생성");
         }
         else
         {
@@ -252,18 +252,18 @@ public class MatchingChecker
             {
                 if (findinfo.direction == MatchDir.Horizon)
                 {
-                    findinfo.Remover = RemoveType.VerticalRemover;
-                    Debug.LogFormat($"[Remover]{RemoveType.VerticalRemover.ToString()}");
+                    findinfo.Remover = MatchType.Vertical4;
+                    Debug.LogFormat($"[Remover]{MatchType.Vertical4.ToString()}");
                 }
                 else if (findinfo.direction == MatchDir.Vertical)
                 {
-                    findinfo.Remover = RemoveType.HorizonRemover;
-                    Debug.LogFormat($"[Remover]{RemoveType.HorizonRemover.ToString()}");
+                    findinfo.Remover = MatchType.Horizon4;
+                    Debug.LogFormat($"[Remover]{MatchType.Horizon4.ToString()}");
                 }
             }
             else if (findinfo.Length == 5) 
             {
-                findinfo.Remover = RemoveType.KindRemover;
+                findinfo.Remover = MatchType.KindRemover;
                 Debug.LogFormat($"[Remover]타입지우기");
             }
         }
@@ -312,7 +312,7 @@ public class MatchingChecker
                 {
                     // todo : 일반화를 위해서는 함수로 빼야함.
                     //matchinfo.AddTilePosition(curtile.GetLocation());
-                    matchinfo.Remover = RemoveType.Butterfly;
+                    matchinfo.Remover = MatchType.Butterfly;
                     matchinfo.isMatch = true;
                     // 생성위치도 필요
                     matchInfos.Add(new MatchInfo(matchinfo));                    
@@ -358,7 +358,7 @@ public class MatchingChecker
                     tile.MarkFound();
                 }
 
-                findinfo.Remover = RemoveType.Butterfly;
+                findinfo.Remover = MatchType.Butterfly;
                 findinfo.isMatch = true;
 
                 // 생성위치도 필요

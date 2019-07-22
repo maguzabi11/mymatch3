@@ -19,11 +19,13 @@ public class MatchInfo
     { get { return direction == MatchDir.Cross;}}
 
     // remover 생성 정보 필요
-    public RemoveType Remover;
+    public MatchType Remover; // 적절한 이름 고민 중
+
+    public Point2D creationPos;
 
     public bool isLinearMatch
     {
-        get { return (Remover == RemoveType.Normal || Remover == RemoveType.HorizonRemover || Remover == RemoveType.VerticalRemover);}
+        get { return (Remover == MatchType.Normal || Remover == MatchType.Horizon4 || Remover == MatchType.Vertical4);}
     }
 
     public int Length { get { return matchlist.Count; } }

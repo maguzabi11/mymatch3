@@ -154,7 +154,7 @@ namespace Tests
             //gp.CreateMatchWithCross(); // 'ㄱ'형
             gp.FindAllMatches(); // 움직여서 검사?
 
-            Assert.That(gp.IsExistRemover(RemoveType.Bomb));
+            Assert.That(gp.IsExistRemover(MatchType.Bomb));
         }
 
         [Test]
@@ -162,7 +162,7 @@ namespace Tests
         {
             gp.CreateMatch4();
             gp.FindAllMatches();
-            Assert.That(gp.IsExistRemover(RemoveType.HorizonRemover));
+            Assert.That(gp.IsExistRemover(MatchType.Horizon4));
         }
 
         [Test]
@@ -170,7 +170,7 @@ namespace Tests
         {
             gp.CreateMatch4();
             gp.FindAllMatches();
-            Assert.That(gp.IsExistRemover(RemoveType.VerticalRemover));
+            Assert.That(gp.IsExistRemover(MatchType.Vertical4));
         }
 
         [Test]
@@ -178,7 +178,7 @@ namespace Tests
         {
             gp.CreateMatchSqure22();
             gp.IsMatch2by2(0, 3);
-            Assert.That(gp.IsExistRemover(RemoveType.Butterfly));            
+            Assert.That(gp.IsExistRemover(MatchType.Butterfly));            
         }
 
        [Test]
@@ -186,7 +186,7 @@ namespace Tests
         {
             gp.CreateMatchSqure22_and_3();
             gp.FindAllMatches();
-            Assert.That(gp.IsExistRemover(RemoveType.Butterfly));            
+            Assert.That(gp.IsExistRemover(MatchType.Butterfly));            
             gp.ProcessMatchTiles();
         }        
 

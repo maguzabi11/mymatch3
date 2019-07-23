@@ -19,13 +19,18 @@ public class MatchInfo
     { get { return direction == MatchDir.Cross;}}
 
     // remover 생성 정보 필요
-    public MatchType Remover; // 적절한 이름 고민 중
+    public MatchType matchType; // 적절한 이름 고민 중
 
     public Point2D creationPos;
 
     public bool isLinearMatch
     {
-        get { return (Remover == MatchType.Normal || Remover == MatchType.Horizon4 || Remover == MatchType.Vertical4);}
+        get { return (matchType == MatchType.Normal || matchType == MatchType.Horizon4 || matchType == MatchType.Vertical4);}
+    }
+
+    public bool isCreationTile
+    {
+        get { return (matchType != MatchType.Normal);}
     }
 
     public int Length { get { return matchlist.Count; } }
@@ -35,6 +40,13 @@ public class MatchInfo
         direction = MatchDir.None;
         matchlist.Clear();
         isMatch = false;
+    }
+
+    public void SetCreationPos(int x, int y)
+    {
+        AddTilePosition(x, y);
+        creationPos.row = x;
+        creationPos.col = y;        
     }
 
     public void AddTilePosition(int x, int y)
@@ -72,7 +84,7 @@ public class MatchInfo
         matchlist = new MatchList(info.matchlist);
         isMatch = info.isMatch;
         direction = info.direction;
-        Remover = info.Remover;
+        matchType = info.matchType;
     }
 
     public bool Find(int row, int col)

@@ -39,7 +39,7 @@ public class MatchingChecker
     {
         for(int i=0; i<matchInfos.Count; i++ )
         {
-            if( matchInfos[i].Remover == remover )
+            if( matchInfos[i].matchType == remover )
                 return true;
         }
         return false;
@@ -88,12 +88,12 @@ public class MatchingChecker
             baseTile.IsChecked = true;
 
         // 검사 기준을 먼저 둔다
-        findinfo.AddTilePosition(row, col);
+        findinfo.SetCreationPos(row, col);
 
         FindMatch( row, col, findinfo, FindDirection.Horizon);
         FindMatch( row, col, findinfo, FindDirection.Vertical);
         if( findinfo.isMatch )
-            matchInfos.Add(new MatchInfo(findinfo));
+            AddCreatetionMatchInfo(new MatchInfo(findinfo)); //matchInfos.Add(new MatchInfo(findinfo));
                 
         IsMatch2by2(row, col); // 확정되지 않은 코드 (검증이 필요한 부분)
 
@@ -197,16 +197,13 @@ public class MatchingChecker
                 findinfo.direction |= matchedInfo.direction;
                 findinfo.AddTilePosition(matchedInfo);
                 matchInfos.Remove(matchedInfo);
+                findinfo.creationPos = tile.GetLocation();
             }
             // 타일 위치의 중복을 허용하면서 현재는 이에 대한 검증이 안되어 있음.
-            else if (matchedInfo.Remover == MatchType.Butterfly)
+            else if (matchedInfo.matchType == MatchType.Butterfly)
             {
                 Debug.LogFormat("나비 발견.");
                 findinfo.AddTilePosition(tile.GetLocation());
-
-                // 나비 제거 (취소함)
-                //resetMatchedInfo(matchedInfo);
-                //matchInfos.Remove(matchedInfo);
             }
             else
             {
@@ -243,7 +240,7 @@ public class MatchingChecker
         {
             // 레퍼런스 확인이 필요
             // 크로스지만 개수가 6개가 넘는다면 폭탄이 아닌 파인애플로 만들어지는지 
-            findinfo.Remover = MatchType.Bomb;
+            findinfo.matchType = MatchType.Bomb;
             Debug.LogFormat($"[Remover] {MatchType.Bomb.ToString()}생성");
         }
         else
@@ -252,18 +249,18 @@ public class MatchingChecker
             {
                 if (findinfo.direction == MatchDir.Horizon)
                 {
-                    findinfo.Remover = MatchType.Vertical4;
+                    findinfo.matchType = MatchType.Vertical4;
                     Debug.LogFormat($"[Remover]{MatchType.Vertical4.ToString()}");
                 }
                 else if (findinfo.direction == MatchDir.Vertical)
                 {
-                    findinfo.Remover = MatchType.Horizon4;
+                    findinfo.matchType = MatchType.Horizon4;
                     Debug.LogFormat($"[Remover]{MatchType.Horizon4.ToString()}");
                 }
             }
             else if (findinfo.Length == 5) 
             {
-                findinfo.Remover = MatchType.KindRemover;
+                findinfo.matchType = MatchType.KindRemover;
                 Debug.LogFormat($"[Remover]타입지우기");
             }
         }
@@ -312,7 +309,7 @@ public class MatchingChecker
                 {
                     // todo : 일반화를 위해서는 함수로 빼야함.
                     //matchinfo.AddTilePosition(curtile.GetLocation());
-                    matchinfo.Remover = MatchType.Butterfly;
+                    matchinfo.matchType = MatchType.Butterfly;
                     matchinfo.isMatch = true;
                     // 생성위치도 필요
                     matchInfos.Add(new MatchInfo(matchinfo));                    
@@ -358,11 +355,11 @@ public class MatchingChecker
                     tile.MarkFound();
                 }
 
-                findinfo.Remover = MatchType.Butterfly;
+                findinfo.matchType = MatchType.Butterfly;
                 findinfo.isMatch = true;
 
                 // 생성위치도 필요
-                matchInfos.Add(new MatchInfo(findinfo));
+                AddCreatetionMatchInfo(new MatchInfo(findinfo));
                 
                 matchCandidates.Clear();
                 return true;
@@ -412,6 +409,28 @@ public class MatchingChecker
             str.Clear();
         }
     }
+
+    // 실험
+    // 생성해야할 타일이 있는 매치 정보 앞에 3매치가 있는 경우
+    // 3매치 앞에 삽입하도록 
+    public void AddCreatetionMatchInfo(MatchInfo item)
+    {
+        if( matchInfos.Count == 0 )
+        {
+            matchInfos.Add(item);
+            return;
+        }
+        
+        int last = matchInfos.Count - 1;
+        if(!matchInfos[last].isCreationTile)
+        {
+            matchInfos.Insert(last, item);
+        }
+        else
+            matchInfos.Add(item);
+    }
+
+
 }
 
 

@@ -38,7 +38,7 @@ public class Square22Pattern : PatternBase
          B_
          BB
          */
-         matchlist.Add(new List<Point2D>{new Point2D(0,-1), new Point2D(-1,-1), new Point2D(1,0)});
+         matchlist.Add(new List<Point2D>{new Point2D(0,-1), new Point2D(1,-1), new Point2D(1,0)});
 
         /*
          BB

@@ -323,32 +323,14 @@ public class MatchingChecker
 
     //
     private bool IsMatch2by2(int row, int col)
-    {
-        var curtile = _gamepanel.tiles[row, col];
-        if( curtile == null) return false;
-
-        List<Tile> matchCandidates = new List<Tile>();
-        bool isFound = false;
-        var pattern = Square22Pattern.Instance; // 추후 패턴 일반화
-        for(int p=0; p<pattern.Length; p++)
         {
-            int nblock = pattern.GetPatternLength(p);
-            int i=0;
-            for(; i<nblock; i++)
-            {
-                var tilepos = pattern.GetPatternPos(p, i, row, col);
-                if( _gamepanel.Isbound(tilepos) == false )
-                    break;
+            var curtile = _gamepanel.tiles[row, col];
+            if (curtile == null) return false;
 
-                var tile = _gamepanel.tiles[tilepos.row, tilepos.col];
-                if(tile == null || tile.Type != curtile.Type ) // || tile.IsMatched
-                    break;
-
-                matchCandidates.Add(tile); // 패턴이 모두 맞아야 추가가 가능함...
-            }
-
-            isFound = (i == nblock);
-            if(isFound)
+            List<Tile> matchCandidates = new List<Tile>();
+            var pattern = Square22Pattern.Instance;
+            bool isFound = isMatchedPattern(pattern, curtile, matchCandidates);
+            if (isFound)
             {
                 findinfo.matchType = MatchType.Butterfly;
                 findinfo.isMatch = true;
@@ -364,11 +346,11 @@ public class MatchingChecker
                     else
                     {
                         var matchedInfo = findMatchInfo(tile.row, tile.col);
-                        if( matchedInfo == null )
+                        if (matchedInfo == null)
                             continue;
 
                         Debug.LogFormat("교차점[{0},{1}] 발견", tile.row, tile.col);
-                        if( matchedInfo.matchType == MatchType.Normal )
+                        if (matchedInfo.matchType == MatchType.Normal)
                         {
                             // 해당 좌표만 제거
                             matchedInfo.matchlist.Remove(new Point2D(tile.row, tile.col));
@@ -376,19 +358,43 @@ public class MatchingChecker
                     }
                 }
 
-                // 생성위치도 필요
                 AddCreatetionMatchInfo(new MatchInfo(findinfo));
-                
-                matchCandidates.Clear();
-                return true;
-            }            
+            }
             matchCandidates.Clear();
+            return isFound;
         }
-        return false;
-    }
 
-    // GamePanel에서 옮겨옴
-    public bool IsMatchablePlace(int row, int col, int type)
+        private bool isMatchedPattern(PatternBase pattern,Tile curtile, List<Tile> matchCandidates)
+        {
+            bool isFound = false;
+            for (int p = 0; p < pattern.Length; p++)
+            {
+                matchCandidates.Clear();
+                int nblock = pattern.GetPatternLength(p);
+                int i = 0;
+                for (; i < nblock; i++)
+                {
+                    var tilepos = pattern.GetPatternPos(p, i, curtile.row, curtile.col);
+                    if (_gamepanel.Isbound(tilepos) == false)
+                        break;
+
+                    var tile = _gamepanel.tiles[tilepos.row, tilepos.col];
+                    if (tile == null || tile.Type != curtile.Type)
+                        break;
+
+                    matchCandidates.Add(tile); // 패턴이 모두 맞아야 추가
+                }
+
+                isFound = (i == nblock);
+                if (isFound)
+                    break;
+            }
+
+            return isFound;
+        }
+
+        // GamePanel에서 옮겨옴
+        public bool IsMatchablePlace(int row, int col, int type)
     {
         var pattern = MatchablePattern.Instance;
         // 패턴 쪽으로 이동할듯
@@ -441,9 +447,7 @@ public class MatchingChecker
         
         int last = matchInfos.Count - 1;
         if(!matchInfos[last].isCreationTile)
-        {
             matchInfos.Insert(last, item);
-        }
         else
             matchInfos.Add(item);
     }

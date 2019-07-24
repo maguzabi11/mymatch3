@@ -323,78 +323,81 @@ public class MatchingChecker
 
     //
     private bool IsMatch2by2(int row, int col)
+    {
+        var curtile = _gamepanel.tiles[row, col];
+        if (curtile == null) return false;
+
+        List<Tile> matchCandidates = new List<Tile>();
+        var pattern = Square22Pattern.Instance;
+        bool isFound = isMatchedPattern(pattern, curtile, matchCandidates);
+        if (isFound)
         {
-            var curtile = _gamepanel.tiles[row, col];
-            if (curtile == null) return false;
+            findinfo.matchType = MatchType.Butterfly;
+            findinfo.isMatch = true;
 
-            List<Tile> matchCandidates = new List<Tile>();
-            var pattern = Square22Pattern.Instance;
-            bool isFound = isMatchedPattern(pattern, curtile, matchCandidates);
-            if (isFound)
+            // makeMatch 내의 루프 참조 
+            foreach (var tile in matchCandidates)
             {
-                findinfo.matchType = MatchType.Butterfly;
-                findinfo.isMatch = true;
-
-                // makeMatch 내의 루프 참조 
-                foreach (var tile in matchCandidates)
+                bool bAddPostion = !tile.IsMatched;
+                if (tile.IsMatched)
                 {
-                    if (tile.IsMatched == false)
-                    {
-                        findinfo.AddTilePosition(tile.GetLocation());
-                        tile.MarkFound();
-                    }
-                    else
-                    {
-                        var matchedInfo = findMatchInfo(tile.row, tile.col);
-                        if (matchedInfo == null)
-                            continue;
+                    var matchedInfo = findMatchInfo(tile.row, tile.col);
+                    if (matchedInfo == null)
+                        continue;
 
-                        Debug.LogFormat("교차점[{0},{1}] 발견", tile.row, tile.col);
-                        if (matchedInfo.matchType == MatchType.Normal)
-                        {
-                            // 해당 좌표만 제거
-                            matchedInfo.matchlist.Remove(new Point2D(tile.row, tile.col));
-                        }
+                    Debug.LogFormat("교차점[{0},{1}] 발견", tile.row, tile.col);
+                    if (matchedInfo.matchType == MatchType.Normal)
+                    {
+                        // 해당 좌표만 제거
+                        matchedInfo.matchlist.Remove(tile.GetLocation());
+                        bAddPostion = true;
                     }
                 }
 
-                AddCreatetionMatchInfo(new MatchInfo(findinfo));
+                if (bAddPostion)
+                {
+                    findinfo.AddTilePosition(tile.GetLocation());
+                    tile.MarkFound();
+                }                
             }
+
+            AddCreatetionMatchInfo(new MatchInfo(findinfo));
+        }
+        matchCandidates.Clear();
+        return isFound;
+    }
+
+    private bool isMatchedPattern(PatternBase pattern,Tile curtile, List<Tile> matchCandidates)
+    {
+        bool isFound = false;
+        for (int p = 0; p < pattern.Length; p++)
+        {
             matchCandidates.Clear();
-            return isFound;
-        }
-
-        private bool isMatchedPattern(PatternBase pattern,Tile curtile, List<Tile> matchCandidates)
-        {
-            bool isFound = false;
-            for (int p = 0; p < pattern.Length; p++)
+            int nblock = pattern.GetPatternLength(p);
+            int i = 0;
+            for (; i < nblock; i++)
             {
-                matchCandidates.Clear();
-                int nblock = pattern.GetPatternLength(p);
-                int i = 0;
-                for (; i < nblock; i++)
-                {
-                    var tilepos = pattern.GetPatternPos(p, i, curtile.row, curtile.col);
-                    if (_gamepanel.Isbound(tilepos) == false)
-                        break;
-
-                    var tile = _gamepanel.tiles[tilepos.row, tilepos.col];
-                    if (tile == null || tile.Type != curtile.Type)
-                        break;
-
-                    matchCandidates.Add(tile); // 패턴이 모두 맞아야 추가
-                }
-
-                isFound = (i == nblock);
-                if (isFound)
+                var tilepos = pattern.GetPatternPos(p, i, curtile.row, curtile.col);
+                if (_gamepanel.Isbound(tilepos) == false)
                     break;
+
+                var tile = _gamepanel.tiles[tilepos.row, tilepos.col];
+                if (tile == null || tile.Type != curtile.Type)
+                    break;
+
+                matchCandidates.Add(tile); // 패턴이 모두 맞아야 추가
             }
 
-            return isFound;
+            isFound = (i == nblock);
+            if (isFound)
+                break;
         }
+
+        return isFound;
+    }
 
         // GamePanel에서 옮겨옴
-        public bool IsMatchablePlace(int row, int col, int type)
+    public bool IsMatchablePlace(int row, int col, int type)
     {
         var pattern = MatchablePattern.Instance;
         // 패턴 쪽으로 이동할듯

@@ -51,7 +51,7 @@ public class TileController : MonoBehaviour
         ReqMoveTile( signal.tile, signal.movement);
     }
 
-    void OnDestry()
+    void OnDestroy()
     {
         _signalBus.Unsubscribe<TileMovementSignal>(OnTileMoveSignal);
     }

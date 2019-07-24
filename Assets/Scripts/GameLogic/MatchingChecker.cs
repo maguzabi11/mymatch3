@@ -93,9 +93,11 @@ public class MatchingChecker
         FindMatch( row, col, findinfo, FindDirection.Horizon);
         FindMatch( row, col, findinfo, FindDirection.Vertical);
         if( findinfo.isMatch )
-            AddCreatetionMatchInfo(new MatchInfo(findinfo)); //matchInfos.Add(new MatchInfo(findinfo));
-                
-        IsMatch2by2(row, col); // 확정되지 않은 코드 (검증이 필요한 부분)
+            AddCreatetionMatchInfo(new MatchInfo(findinfo)); 
+
+        // 레퍼런스 게임 참조 
+        if( findinfo.matchType == MatchType.Normal )
+            IsMatch2by2(row, col);
 
         findinfo.Reset();
     }
@@ -155,10 +157,7 @@ public class MatchingChecker
     // 발견된 매치 타일로 새로운 매치 정보 만들기
     private void makeMatch(MatchInfo findinfo, FindDirection dir, List<Tile> matchCandidates)
     {
-        // 버그: 이제는 무조건 매치를 하면 안되고
-        //  타일이 이미 만들어진 것과 겹친 부분이 있으면 
-        //  우선 순위에 따라 어떻게 처리할지가 결정되어야 한다.
-        findinfo.isMatch = true;
+         findinfo.isMatch = true;
 
         if (dir == FindDirection.Horizon)
             findinfo.direction |= MatchDir.Horizon;
@@ -188,27 +187,29 @@ public class MatchingChecker
         if( matchedInfo == null )
             return;
 
-        if (matchedInfo.Find(tile.row, tile.col))
+        Debug.LogFormat("교차점[{0},{1}] 발견", tile.row, tile.col);
+        
+        if (matchedInfo.isLinearMatch) // 교차되면서 매치를 하나로 합치기
         {
-            Debug.LogFormat("교차점[{0},{1}] 발견", tile.row, tile.col);
-            
-            if (matchedInfo.isLinearMatch) // 교차되면서 매치를 하나로 합치기
+            findinfo.direction |= matchedInfo.direction;
+            findinfo.AddTilePosition(matchedInfo);
+            matchInfos.Remove(matchedInfo);
+            findinfo.creationPos = tile.GetLocation();
+        }
+        // 타일 위치의 중복을 허용하면서 현재는 이에 대한 검증이 안되어 있음.
+        else if (matchedInfo.matchType == MatchType.Butterfly)
+        {
+            Debug.LogFormat("나비 발견.");
+            if( findinfo.isCreationTile && findinfo.matchType != MatchType.Butterfly )
             {
-                findinfo.direction |= matchedInfo.direction;
-                findinfo.AddTilePosition(matchedInfo);
+                resetMatchedInfo(matchedInfo);
+                findinfo.AddTilePosition(tile.GetLocation());
                 matchInfos.Remove(matchedInfo);
-                findinfo.creationPos = tile.GetLocation();
             }
-            // 타일 위치의 중복을 허용하면서 현재는 이에 대한 검증이 안되어 있음.
-            else if (matchedInfo.matchType == MatchType.Butterfly)
-            {
-                Debug.LogFormat("나비 발견.");
-                findinfo.AddTilePosition(tile.GetLocation());
-            }
-            else
-            {
-                findinfo.AddTilePosition(tile.GetLocation());
-            }
+        }
+        else
+        {
+            findinfo.AddTilePosition(tile.GetLocation());
         }
     }
 
@@ -225,7 +226,7 @@ public class MatchingChecker
 
     private MatchInfo findMatchInfo(int row, int col)
     {
-        // row, col가 들어있는 매치 정보는 중복하지 않는다고 가정
+        // row, col가 들어있는 매치 정보는 중복하지 않는다고 가정 - 주의: 현재 중복 존재
         for (int i = 0; i < matchInfos.Count; i++)
         {
             if (matchInfos[i].Find(row, col))
@@ -340,7 +341,7 @@ public class MatchingChecker
                     break;
 
                 var tile = _gamepanel.tiles[tilepos.row, tilepos.col];
-                if(tile == null || tile.Type != curtile.Type || tile.IsMatched)
+                if(tile == null || tile.Type != curtile.Type ) // || tile.IsMatched
                     break;
 
                 matchCandidates.Add(tile); // 패턴이 모두 맞아야 추가가 가능함...
@@ -349,14 +350,31 @@ public class MatchingChecker
             isFound = (i == nblock);
             if(isFound)
             {
-                foreach (var tile in matchCandidates)
-                {
-                    findinfo.AddTilePosition(tile.GetLocation());
-                    tile.MarkFound();
-                }
-
                 findinfo.matchType = MatchType.Butterfly;
                 findinfo.isMatch = true;
+
+                // makeMatch 내의 루프 참조 
+                foreach (var tile in matchCandidates)
+                {
+                    if (tile.IsMatched == false)
+                    {
+                        findinfo.AddTilePosition(tile.GetLocation());
+                        tile.MarkFound();
+                    }
+                    else
+                    {
+                        var matchedInfo = findMatchInfo(tile.row, tile.col);
+                        if( matchedInfo == null )
+                            continue;
+
+                        Debug.LogFormat("교차점[{0},{1}] 발견", tile.row, tile.col);
+                        if( matchedInfo.matchType == MatchType.Normal )
+                        {
+                            // 해당 좌표만 제거
+                            matchedInfo.matchlist.Remove(new Point2D(tile.row, tile.col));
+                        }
+                    }
+                }
 
                 // 생성위치도 필요
                 AddCreatetionMatchInfo(new MatchInfo(findinfo));

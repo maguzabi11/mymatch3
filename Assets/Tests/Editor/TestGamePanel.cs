@@ -186,8 +186,19 @@ namespace Tests
         {
             gp.CreateMatchSqure22_and_3();
             gp.FindAllMatches();
+            Assert.That(gp.IsExistRemover(MatchType.Butterfly));
+            Assert.That(gp.IsExistRemover(MatchType.Normal));
+           // gp.ProcessMatchTiles();
+        }
+
+       [Test]
+        public void 매치_3And2by2AndwithFindAll()
+        {
+            gp.CreateMatch3_and_Squre22();
+            gp.FindAllMatches();
+            Assert.That(gp.IsExistRemover(MatchType.Normal));
             Assert.That(gp.IsExistRemover(MatchType.Butterfly));            
-            gp.ProcessMatchTiles();
+           // gp.ProcessMatchTiles();
         }        
 
         //// A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use

@@ -40,6 +40,7 @@ public class MatchInfo
         direction = MatchDir.None;
         matchlist.Clear();
         isMatch = false;
+        matchType = MatchType.Normal;
     }
 
     public void SetCreationPos(int x, int y)

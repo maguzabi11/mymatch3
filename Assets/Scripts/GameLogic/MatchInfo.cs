@@ -86,6 +86,7 @@ public class MatchInfo
         isMatch = info.isMatch;
         direction = info.direction;
         matchType = info.matchType;
+        creationPos = info.creationPos;
     }
 
     public bool Find(int row, int col)

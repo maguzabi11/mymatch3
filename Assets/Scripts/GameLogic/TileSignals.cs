@@ -29,12 +29,15 @@ public class TileDeleteSignal
 
 public class EndTileAttractionSignal
 {
-    public Tile tile;
+    public MatchInfo matchInfo;
+    public MatchType match;
 
-    public EndTileAttractionSignal(Tile tile)
+    public EndTileAttractionSignal(MatchInfo matchInfo)
     {
-        this.tile = tile;
+        this.matchInfo = matchInfo;
+        match = matchInfo.matchType;
     }
+
 }
 
 public class SpecialTileCreateSignal

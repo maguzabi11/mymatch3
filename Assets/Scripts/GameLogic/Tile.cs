@@ -219,7 +219,7 @@ public class Tile
     }
  
     // 시그널로 하니 모든 타일이 대상이되므로 불필요한 메시지를 자주받게 된다.
-    public void Attract(Tile dstTile)
+    public void Attract(MatchInfo matchInfo, Tile dstTile)
     {
         if( dstTile.gameTile == null || gameTile == null )
             return;
@@ -228,7 +228,7 @@ public class Tile
         gameTile.transform.DOMove(new Vector3(vecTo.x, vecTo.y), duration * 0.5f)
             .OnComplete( () => {
                 Delete();
-                _signalBus.Fire(new EndTileAttractionSignal(this));
+                _signalBus.Fire(new EndTileAttractionSignal(matchInfo));
             }
             );
     }    

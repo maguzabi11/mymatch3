@@ -24,7 +24,7 @@ namespace Tests
             Container.DeclareSignal<TileDeleteSignal>().OptionalSubscriber();  
             Container.DeclareSignal<FillTileSignal>().OptionalSubscriber();
             Container.DeclareSignal<TileDropSignal>();
-            Container.DeclareSignal<SpecialTileCreateSignal>();
+            Container.DeclareSignal<EndTileAttractionSignal>();
 
             Container.BindFactory<UnityEngine.Object, TileInput, TileInput.Factory>()
                 .FromFactory<TileInputFactory>()

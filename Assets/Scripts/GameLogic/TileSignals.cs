@@ -27,6 +27,16 @@ public class TileDeleteSignal
     }
 }
 
+public class EndTileAttractionSignal
+{
+    public Tile tile;
+
+    public EndTileAttractionSignal(Tile tile)
+    {
+        this.tile = tile;
+    }
+}
+
 public class SpecialTileCreateSignal
 {
     public MatchInfo match;

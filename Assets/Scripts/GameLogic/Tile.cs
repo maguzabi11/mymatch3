@@ -201,11 +201,31 @@ public class Tile
         gameTile.SetActive(false);
         Object.Destroy(gameTile);
     }
+ 
+    // 시그널로 하니 모든 타일이 대상이되므로 불필요한 메시지를 자주받게 된다.
+    public void Attract(Tile dstTile)
+    {
+        if( dstTile.gameTile == null || gameTile == null )
+            return;
+
+        var vecTo = dstTile.gameTile.transform.position;
+        gameTile.transform.DOMove(new Vector3(vecTo.x, vecTo.y), duration * 0.5f)
+            .OnComplete( () => {
+                Delete();
+                _signalBus.Fire(new EndTileAttractionSignal(this));
+            }
+            );
+    }    
 
     public void ChangeType(int type)
     {
         this.type = type;
         // gameTile. 리소스를 바꾸면 지우고 다시 생새어하는 번거로움이 없어짐.
+    }
+
+    public void SetRemoverType(MatchType remover)
+    {
+        removeType = remover;
     }
 
     public void ChangeTile(Sprite sprite)

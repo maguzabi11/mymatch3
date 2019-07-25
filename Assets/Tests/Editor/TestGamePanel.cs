@@ -21,7 +21,6 @@ namespace Tests
         {
             SignalBusInstaller.Install(Container);
             Container.DeclareSignal<TileMovementSignal>().OptionalSubscriber();
-            Container.DeclareSignal<TileDeleteSignal>().OptionalSubscriber();  
             Container.DeclareSignal<FillTileSignal>().OptionalSubscriber();
             Container.DeclareSignal<TileDropSignal>();
             Container.DeclareSignal<EndTileAttractionSignal>();

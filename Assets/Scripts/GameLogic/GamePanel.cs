@@ -307,15 +307,12 @@ namespace Match3
 
                 var dstTile = tiles[matchinfo.creationPos.row, matchinfo.creationPos.col];
                 _nAttractTileSignal++;
-                //_signalBus.Fire(new StartTileAttractionSignal(tile, dstTile));
-                 // 모든 타일이 받는다면 다른 방법을 생각 권장...
-                // 왜냐하면 tile함수를 바로 호출해도 되는 구조기 때문.
+
                 tile.Attract(dstTile);
                 tiles[pos.row, pos.col] = null; // 
 
                 output.AppendFormat($"[{pos.row},{pos.col}]");
             }
-            // 생성 시점과 제거 시점 정할 것
         }
 
         private void DeleteMatch3Tiles(StringBuilder output, MatchList list)
@@ -326,7 +323,7 @@ namespace Match3
                 if (tile == null)
                     continue;
 
-                _signalBus.Fire(new TileDeleteSignal(tile));
+                tile.DeleteWithFade();
 
                 // 이제 타일의 효과를 발동시켜야 한다.
                 // 영향받는 타일들이 중복될 수 있음 고려할 것

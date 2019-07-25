@@ -96,7 +96,7 @@ public class MatchingChecker
             AddCreatetionMatchInfo(new MatchInfo(findinfo)); 
 
         // 레퍼런스 게임 참조 
-        if( findinfo.matchType == MatchType.Normal )
+        if( findinfo.isMatch == false || findinfo.matchType == MatchType.Normal )
             IsMatch2by2(row, col);
 
         findinfo.Reset();

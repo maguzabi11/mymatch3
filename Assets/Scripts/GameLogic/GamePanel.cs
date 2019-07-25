@@ -45,7 +45,7 @@ namespace Match3
             _signalBus = signalBus;
             _signalBus.Subscribe<FillTileSignal>(OnFillTileSignal);
             _signalBus.Subscribe<TileDropSignal>(OnTileDropSignal);
-            _signalBus.Subscribe<SpecialTileCreateSignal>(OnSpecialTileCreateSignal);
+            _signalBus.Subscribe<EndTileAttractionSignal>(OnEndAttractTileSignal);            
         }
 
         public GamePanel()
@@ -272,37 +272,69 @@ namespace Match3
         {
             var output = new StringBuilder();
 
-            // 특수 매치로 인한 타일 생성과 매치3 삭제 시그널이 별도로
-            // 취급되면서 처리순서와 시그널 동기화 이슈가 발생.
-
             _nSendDeleteSignal = 0; // 생성과 제거가 공동으로 처리될 예정
+            _nAttractTileSignal = 0;
             var matches = _matchingChecker.GetMatchInfo();
             for (int i = 0; i < matches.Count; i++)
             {
-                MatchList list = matches[i].matchlist;
                 output.AppendFormat($"{i}:");
-                foreach (Point2D pos in list)
-                {
-                    var tile = tiles[pos.row, pos.col];
-                    if( tile == null )
-                        continue;
+                MatchList list = matches[i].matchlist;
 
-                    _signalBus.Fire(new TileDeleteSignal(tile));
-
-                    // 이제 타일의 효과를 발동시켜야 한다.
-                    // 영향받는 타일들이 중복될 수 있음 고려할 것
-
-                    _nSendDeleteSignal++;
-                    tiles[pos.row, pos.col] = null;
-
-                    output.AppendFormat($"[{pos.row},{pos.col}]");
-                }
+                // 특수 타일 생성
+                if (matches[i].isCreationTile)
+                    CreateSpecialTile(output, matches[i]);
+                else
+                    DeleteMatch3Tiles(output, list);
             }
 
             if (matches.Count > 0)
             {
                 Debug.LogFormat(output.ToString());
                 CalculateScore(matches);
+            }
+        }
+
+        private void CreateSpecialTile(StringBuilder output, MatchInfo matchinfo)
+        {
+            foreach (Point2D pos in matchinfo.matchlist)
+            {
+                var tile = tiles[pos.row, pos.col];
+                if (tile == null)
+                    continue;
+
+                if( matchinfo.creationPos.row == pos.row && matchinfo.creationPos.col == pos.col )
+                    continue;
+
+                var dstTile = tiles[matchinfo.creationPos.row, matchinfo.creationPos.col];
+                _nAttractTileSignal++;
+                //_signalBus.Fire(new StartTileAttractionSignal(tile, dstTile));
+                 // 모든 타일이 받는다면 다른 방법을 생각 권장...
+                // 왜냐하면 tile함수를 바로 호출해도 되는 구조기 때문.
+                tile.Attract(dstTile);
+                tiles[pos.row, pos.col] = null; // 
+
+                output.AppendFormat($"[{pos.row},{pos.col}]");
+            }
+            // 생성 시점과 제거 시점 정할 것
+        }
+
+        private void DeleteMatch3Tiles(StringBuilder output, MatchList list)
+        {
+            foreach (Point2D pos in list)
+            {
+                var tile = tiles[pos.row, pos.col];
+                if (tile == null)
+                    continue;
+
+                _signalBus.Fire(new TileDeleteSignal(tile));
+
+                // 이제 타일의 효과를 발동시켜야 한다.
+                // 영향받는 타일들이 중복될 수 있음 고려할 것
+
+                _nSendDeleteSignal++;
+                tiles[pos.row, pos.col] = null;
+
+                output.AppendFormat($"[{pos.row},{pos.col}]");
             }
         }
 
@@ -523,8 +555,11 @@ namespace Match3
             if( isMatch )
             {
                 // 애니메이션 처리 전에 검사
+                src.SwapLocation(dst); // 순서 테스트.
+
                 int cntMatch = _matchingChecker.FindMatches( new Point2D[] {srcPos, dstPos} );
-                src.SwapLocation(dst);
+                // src.SwapLocation(dst); //
+                
                 // 필요한 경우 시그널 생성
                 Debug.LogFormat($"매치! ({cntMatch})");
                 return true;
@@ -598,6 +633,8 @@ namespace Match3
         int _nSendDeleteSignal;
         int _nSendDropSignal;
 
+        int _nAttractTileSignal; 
+
         // Note: OnFillTileSignal과 OnTileDropSignal는 동시에 발생하면 안됨.
         // OnFillTileSignal -> OnTileDropSignal
         public void OnFillTileSignal(FillTileSignal signal)
@@ -624,10 +661,18 @@ namespace Match3
             }
         }
 
-        private void OnSpecialTileCreateSignal(SpecialTileCreateSignal signal)
+        private void OnEndAttractTileSignal(EndTileAttractionSignal signal)
         {
+            _nAttractTileSignal--;
+             if(_nAttractTileSignal == 0)
+            {
+                Debug.LogFormat("특수 타일 생성하기");
+                // 타일을 생성하지 않고 속성을 변경하는 것을 처리
+                // signal.tile.SetRemoverType(MatchType remover);
+            }
 
-        }
+            //Debug.Assert(_nAttractTileSignal < 0);
+        }        
 
         #endregion
     }

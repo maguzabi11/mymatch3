@@ -40,6 +40,8 @@ public class Tile
         nfound = 0;        
     }
 
+    public bool IsDeleted;
+
     // - 그리드 상의 자신의 위치는 필요한가? 
     // - 참조할 수 있는 인접 타일 정보가 필요한가?
     GameObject gameTile;
@@ -199,6 +201,15 @@ public class Tile
             });
     }
 
+    public void Execute()
+    {
+        IsDeleted = true;
+        if(removeType != MatchType.Normal)
+            gp.RemoveChain( row, col, removeType);
+        //else
+        DeleteWithFade();
+    } 
+
     public void DeleteWithFade()
     {
         Debug.LogFormat($"this:{this.row}{this.col}");
@@ -210,12 +221,13 @@ public class Tile
                 Delete();
                 _signalBus.Fire(new FillTileSignal()); // 여러 타일에서 보낼 필요가 없음...
             });
-    }    
+    }
 
     public void Delete()
     {
         gameTile.SetActive(false);
         Object.Destroy(gameTile);
+        IsDeleted = false;
     }
  
     // 시그널로 하니 모든 타일이 대상이되므로 불필요한 메시지를 자주받게 된다.

@@ -325,7 +325,6 @@ namespace Match3
         // 별도 클래스로 분리 가능성 높음
         private void CountSignal(string Key)
         {
-            // 함수화
             if (signalSyncCounter.ContainsKey(Key))
             {
                 var cnt = ++signalSyncCounter[Key];
@@ -362,16 +361,19 @@ namespace Match3
                 var tile = tiles[pos.row, pos.col];
                 if (tile == null)
                     continue;
-
-                tile.DeleteWithFade();
+                
+                output.AppendFormat($"[{pos.row},{pos.col}]");
 
                 // TODO:#1 이제 타일의 효과를 발동시켜야 한다.
                 // 영향받는 타일들이 중복될 수 있음 고려할 것
-
+                /*
+                특수타일을 먼저 검사해서 연출할 것인가?
+                하나씩 처리하면서 처리?
+                폭탄 영역이 겹쳐있을 때
+                 */
+                tile.Execute(); // 시험 중
                 _nSendDeleteSignal++;
                 tiles[pos.row, pos.col] = null;
-
-                output.AppendFormat($"[{pos.row},{pos.col}]");
             }
         }
 
@@ -663,7 +665,83 @@ namespace Match3
 
             return true;
         }
+
+        // 연쇄적으로 모든 타일을 삭제
+        // 주어진 위치에서 제거 효과가 타나나도록 하는 함수
+        public void RemoveChain(int row, int col, MatchType type )
+        {
+            RemoveTiles( ListRemoveTilebyMatchType(row, col, type ) );
+        }
         
+        public List<Tile> ListRemoveTilebyMatchType(int row, int col, MatchType type )
+        {
+            List<Tile> listRemove = new List<Tile>(); // 
+
+            if(type == MatchType.Horizon4)
+            {
+                for (int i = 0; i < NumCol; i++)
+                {
+                    var tile = tiles[row, i];
+                    if(tile == null)
+                        continue;
+
+                    // 파인애플은 삭제하지 않는다.
+                    if(tile.removeType == MatchType.KindRemover )
+                        continue;
+
+                    if(tile.removeType == type)
+                        tile.removeType = MatchType.Normal; // 후에 연쇄를 중복하지 않기 위함.
+
+                    if( !tile.IsDeleted ) 
+                        listRemove.Add(tile);
+                }
+            }
+            else if(type == MatchType.Vertical4)
+            {
+                for (int i = 0; i < NumRow; i++)
+                {
+                    var tile = tiles[i, col];
+                    if(tile == null)
+                        continue;
+
+                    if(tile.removeType == MatchType.KindRemover )
+                        continue;
+
+                    if(tile.removeType == type)
+                        tile.removeType = MatchType.Normal; // 후에 연쇄를 중복하지 않기 위함.                        
+
+                    if( !tile.IsDeleted ) 
+                        listRemove.Add(tile);
+                }
+            }
+            else if(type == MatchType.Bomb)
+            {
+                // 3by3 크기
+            }
+            else if(type == MatchType.Butterfly)
+            {
+                // 규칙 찾기 (랜덤)
+            }
+            else if(type == MatchType.KindRemover)
+            {
+                // 랜덤 모든 색.
+                // 연출 후에 동기화 주의
+            }
+
+            return listRemove;
+        }        
+
+        // DeleteMatch3Tiles와 같은 구조... 리펙터 대상.
+        public void RemoveTiles(List<Tile> tilelist )
+        {
+            for(int i=0; i<tilelist.Count; i++)
+            {
+                var tile = tilelist[i];                
+                tile.Execute();
+                _nSendDeleteSignal++;
+                tiles[tile.row, tile.col] = null;
+            }
+        }
 
         ///
         #region 시그널 처리 함수, 모든 이벤트가 처리되는 것을 확인 하기 위함
@@ -712,7 +790,7 @@ namespace Match3
                 // 타일 비주얼도 바꿔야한다. 현재는 관련 그래픽 리소스가 없음
                 //tile.ChangeTile(Sprite sprite);
 
-                RemoveSignal(Key);
+                RemoveSignal(Key);  // 현재는 재활용이 불가능하여 제거
                 _signalBus.Fire(new FillTileSignal());
             }
         }        

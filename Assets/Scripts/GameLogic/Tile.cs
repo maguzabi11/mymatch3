@@ -59,11 +59,13 @@ public class Tile
     GamePanel gp;
 
     SignalBus _signalBus;
+    TileBuilder _tilebuilder;
 
     [Inject]
-    public void Constructor(SignalBus signalBus)
+    public void Constructor(SignalBus signalBus, TileBuilder tilebuilder)
     {
         _signalBus = signalBus;
+        _tilebuilder = tilebuilder;
     }
   
 
@@ -248,18 +250,58 @@ public class Tile
     public void ChangeType(int type)
     {
         this.type = type;
-        // gameTile. 리소스를 바꾸면 지우고 다시 생새어하는 번거로움이 없어짐.
     }
 
     public void SetRemoverType(MatchType remover)
     {
         removeType = remover;
+
+        ApplyRemoverVisual();
+    }
+
+    private void ApplyRemoverVisual()
+    {
+        // reset
+        var h_remover = gameTile.transform.Find("h_remover");
+        if( h_remover != null )
+            h_remover.gameObject.SetActive(false);
+        var v_remover = gameTile.transform.Find("v_remover");
+        if( v_remover != null )
+            v_remover.gameObject.SetActive(false);
+
+        // 타입마다 처리 방식이 다름
+        if( removeType == MatchType.Horizon4 )
+        {
+            if( h_remover != null )
+                h_remover.gameObject.SetActive(true);
+        }
+        else if( removeType == MatchType.Vertical4 )
+        {
+            if( v_remover != null )
+                v_remover.gameObject.SetActive(true);
+        }
+        else if( removeType == MatchType.Bomb )
+        {
+            if( gameTile != null)
+                gameTile.GetComponent<SpriteRenderer>().sprite = _tilebuilder.GetSprite(removeType);
+        } 
+        else if( removeType == MatchType.Butterfly )
+        {
+            if( gameTile != null)
+                gameTile.GetComponent<SpriteRenderer>().sprite = _tilebuilder.GetSprite(removeType);
+        }
+        else if( removeType == MatchType.KindRemover )
+        {
+            if( gameTile != null)
+                gameTile.GetComponent<SpriteRenderer>().sprite = _tilebuilder.GetSprite(removeType);
+        }
     }
 
     public void ChangeTile(Sprite sprite)
     {
         // 같은 스프라이트를 가리킨다?
-        gameTile.GetComponent<SpriteRenderer>().sprite = sprite;
+        if( gameTile != null)
+            gameTile.GetComponent<SpriteRenderer>().sprite = sprite;
     }
 }
 

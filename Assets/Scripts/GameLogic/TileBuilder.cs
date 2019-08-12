@@ -10,6 +10,7 @@ namespace Match3
 public class TileBuilder
 {
     Dictionary< int, Object> dicTiles = new Dictionary<int, Object>();
+    Dictionary< int, Object> dicRemover = new Dictionary<int, Object>();
 
     [Inject]
     TileInput.Factory _factory;
@@ -19,8 +20,10 @@ public class TileBuilder
     public TileBuilder()
     {
         InitTileResource(); // 로딩 시간이 걸릴 수 있음. 다른 곳에서 호출 권장.
+        InitRemoverResource();
     }
 
+    // todo: 시각화에 영향을 주는 요소가 늘어난 것에 대한 수정 작업 필요
     public void InitTileResource()
     {
         Object tile;
@@ -34,6 +37,17 @@ public class TileBuilder
         dicTiles.Add(4, tile);
         tile = Resources.Load("Food5");
         dicTiles.Add(5, tile);        
+    }
+
+    private void InitRemoverResource()
+    {
+        Object tile;
+        tile = Resources.Load("Remover1");
+        dicRemover.Add((int)MatchType.Butterfly, tile);
+        tile = Resources.Load("Remover4");
+        dicRemover.Add((int)MatchType.Bomb, tile);        
+        tile = Resources.Load("Remover5");
+        dicRemover.Add((int)MatchType.KindRemover, tile);
     }
    
     public GameObject CreateTileResource(int type)
@@ -49,6 +63,8 @@ public class TileBuilder
             return null;        
     }
 
+    // public GameObject CreateTileResource(int type, MatchType matchType)
+
     public void BindTileResource(Tile tile)
     {
         tile.SetTileObject( CreateTileResource(tile.Type), tileRoot );
@@ -61,6 +77,14 @@ public class TileBuilder
         var objTile = findtile as GameObject; // 되는 건가?
         tile.ChangeType(type);
         tile.ChangeTile(objTile.GetComponent<SpriteRenderer>().sprite);
+    }
+
+    public Sprite GetSprite(MatchType matchType)
+    {
+        Object objFound;
+        dicRemover.TryGetValue((int)matchType, out objFound);
+        var objSprite = objFound as GameObject;
+        return objSprite.GetComponent<SpriteRenderer>().sprite;
     }
 }
 

@@ -315,6 +315,7 @@ namespace Match3
                 var Key = String.Format($"{matchinfo.ToString()}{matchinfo.GetHashCode()}");
                 CountSignal(Key);
 
+                // TODO: 이것이 특수 타일일 경우 효과를 발생 시켜야 하는지 확인할 것.
                 tile.Attract(matchinfo, dstTile);
                 tiles[pos.row, pos.col] = null; // 
 

@@ -79,6 +79,14 @@ public class TileBuilder
         tile.ChangeTile(objTile.GetComponent<SpriteRenderer>().sprite);
     }
 
+    public Sprite GetTileType(int type)
+    {
+        Object findtile;
+        bool bGet = dicTiles.TryGetValue(type, out findtile);
+        var objTile = findtile as GameObject;
+        return objTile.GetComponent<SpriteRenderer>().sprite;
+    }    
+
     public Sprite GetSprite(MatchType matchType)
     {
         Object objFound;

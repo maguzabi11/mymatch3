@@ -255,12 +255,15 @@ public class Tile
     public void SetRemoverType(MatchType remover)
     {
         removeType = remover;
-
-        ApplyRemoverVisual();
+        
+        if( remover != MatchType.Normal && gameTile != null)
+            ApplyRemoverVisual();
     }
 
     private void ApplyRemoverVisual()
     {
+        Debug.Assert(gameTile != null);
+
         // reset
         var h_remover = gameTile.transform.Find("h_remover");
         if( h_remover != null )
@@ -280,21 +283,17 @@ public class Tile
             if( v_remover != null )
                 v_remover.gameObject.SetActive(true);
         }
-        else if( removeType == MatchType.Bomb )
+        else
+        // MatchType.Bomb && MatchType.Butterfly && MatchType.KindRemover
         {
-            if( gameTile != null)
-                gameTile.GetComponent<SpriteRenderer>().sprite = _tilebuilder.GetSprite(removeType);
+            gameTile.GetComponent<SpriteRenderer>().sprite = _tilebuilder.GetSprite(removeType);
+            var kind = gameTile.transform.Find("Kind");
+            if( kind != null )
+            {
+                kind.gameObject.SetActive(true);
+                kind.GetComponent<SpriteRenderer>().sprite = _tilebuilder.GetTileType(type);
+            }
         } 
-        else if( removeType == MatchType.Butterfly )
-        {
-            if( gameTile != null)
-                gameTile.GetComponent<SpriteRenderer>().sprite = _tilebuilder.GetSprite(removeType);
-        }
-        else if( removeType == MatchType.KindRemover )
-        {
-            if( gameTile != null)
-                gameTile.GetComponent<SpriteRenderer>().sprite = _tilebuilder.GetSprite(removeType);
-        }
     }
 
     public void ChangeTile(Sprite sprite)

@@ -109,26 +109,26 @@ namespace Match3
                         removeTypeList.Clear();
                     }
 
-                    // 
                     CreateTile(i, j, type);
                 }
             }
 
         }
 
-        private void CreateTile(int i, int j, int type)
+        private void CreateTile(int i, int j, int type, MatchType remover = MatchType.Normal)
         {
             var newTile = _factory.Create(type, new Point2D(i, j));//
             tiles[i, j] = newTile;
             if (_tilebuilder != null)
                 _tilebuilder.BindTileResource(newTile);
+            tiles[i, j].SetRemoverType(remover);
         }
 
-        public void CreateTileWithoutRc(int i, int j, int type)
+        public void CreateTileWithoutRc(int i, int j, int type, MatchType remover = MatchType.Normal)
         {
-            //var newTile = _factory.Create(type, new Point2D(i, j));//
-            tiles[i, j] = new Tile(type, new Point2D(i, j));
-        }
+            tiles[i, j] = _factory.Create(type, new Point2D(i, j));
+            tiles[i, j].SetRemoverType(remover);
+        }        
 
         public void OutputTiles()
         {
@@ -315,8 +315,8 @@ namespace Match3
                 var Key = String.Format($"{matchinfo.ToString()}{matchinfo.GetHashCode()}");
                 CountSignal(Key);
 
-                // TODO: 이것이 특수 타일일 경우 효과를 발생 시켜야 하는지 확인할 것.
                 tile.Attract(matchinfo, dstTile);
+                tile.Execute(); // 리무버 실행(특수 타입의 타일 처리)
                 tiles[pos.row, pos.col] = null; // 
 
                 output.AppendFormat($"[{pos.row},{pos.col}]");
@@ -365,14 +365,13 @@ namespace Match3
                 
                 output.AppendFormat($"[{pos.row},{pos.col}]");
 
-                // TODO:#1 이제 타일의 효과를 발동시켜야 한다.
                 // 영향받는 타일들이 중복될 수 있음 고려할 것
                 /*
                 특수타일을 먼저 검사해서 연출할 것인가?
                 하나씩 처리하면서 처리?
                 폭탄 영역이 겹쳐있을 때
                  */
-                tile.Execute(); // 시험 중
+                tile.Execute();
                 _nSendDeleteSignal++;
                 tiles[pos.row, pos.col] = null;
             }

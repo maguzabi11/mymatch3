@@ -41,7 +41,8 @@ public class TileController : MonoBehaviour
     public void InitTiles()
     {
         gp.CreatePanel(4, 5);
-        gp.CreateTilesWithoutMatch(); // 반복된 루프 호출을 피하기 위함.
+        gp.CreateTilesWithoutMatch3(); // 반복된 루프 호출을 피하기 위함.
+        // 다양하게 생성할 수 있도록... 외부 스크립트를 활용 고려.
         gp.OutputTiles();
         gp.SetTilePosition();
     }

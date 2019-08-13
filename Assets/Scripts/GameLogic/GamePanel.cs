@@ -66,7 +66,7 @@ namespace Match3
             numCol = height;
         }
 
-        public void CreateTilesWithoutMatch()
+        public void CreateTilesWithoutMatch3()
         {
             // match 확인하는 카운팅
             int nCheckHori = 0;
@@ -83,7 +83,7 @@ namespace Match3
                     int type = tmpTypeList[Random.Range(0, tmpTypeList.Count)];
                     if (nCheckHori >= 2)
                     {
-                        if (type == tiles[i, j - 1].Type && tiles[i, j - 1].Type == tiles[i, j - 2].Type)
+                        if (type == tiles[i, j - 1].Type && type == tiles[i, j - 2].Type)
                         {
                             tmpTypeList.Remove(type);
                             removeTypeList.Add(type);
@@ -95,7 +95,7 @@ namespace Match3
 
                     if (i >= 2)
                     {
-                        if (type == tiles[i - 1, j].Type && tiles[i - 1, j].Type == tiles[i - 2, j].Type)
+                        if (type == tiles[i - 1, j].Type && type == tiles[i - 2, j].Type)
                         {
                             tmpTypeList.Remove(type);
                             removeTypeList.Add(type);
@@ -112,7 +112,6 @@ namespace Match3
                     CreateTile(i, j, type);
                 }
             }
-
         }
 
         private void CreateTile(int i, int j, int type, MatchType remover = MatchType.Normal)
@@ -314,9 +313,9 @@ namespace Match3
 
                 var Key = String.Format($"{matchinfo.ToString()}{matchinfo.GetHashCode()}");
                 CountSignal(Key);
-
+                
+                tile.Execute(); // 현재 Attract와 연동이 문제
                 tile.Attract(matchinfo, dstTile);
-                tile.Execute(); // 리무버 실행(특수 타입의 타일 처리)
                 tiles[pos.row, pos.col] = null; // 
 
                 output.AppendFormat($"[{pos.row},{pos.col}]");

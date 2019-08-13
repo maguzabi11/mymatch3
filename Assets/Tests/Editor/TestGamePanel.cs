@@ -75,7 +75,7 @@ namespace Tests
         public void 타일생성_매치3_발생하지않게()
         {
             gp.CreatePanel(4, 5);
-            gp.CreateTilesWithoutMatch();
+            gp.CreateTilesWithoutMatch3();
             Assert.That(gp.FindAllMatches() == 0);
             gp.OutputTiles();
         }

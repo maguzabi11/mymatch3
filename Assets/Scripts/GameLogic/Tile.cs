@@ -208,7 +208,7 @@ public class Tile
         IsDeleted = true;
         if(removeType != MatchType.Normal)
             gp.RemoveChain( row, col, removeType);
-        //else
+        
         DeleteWithFade();
     } 
 

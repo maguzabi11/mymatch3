@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -20,15 +21,39 @@ namespace Match3
         }
 
         // 생성 유틸함수
-        public static void CreateTileRow(this GamePanel gamepanel, int row, int[] types)
+        public static void CreateTileRow(this GamePanel gamepanel, int row, int[] types, bool withRC = false)
         {
             // 경계 검사
             if( types.Length < gamepanel.NumCol)
                 return;
 
-            for(int i = 0; i<gamepanel.NumCol; i++)
-                gamepanel.CreateTileWithoutRc(row, i, types[i]);
+            if( withRC )
+            {
+                for(int i = 0; i<gamepanel.NumCol; i++)
+                    gamepanel.CreateTile(row, i, types[i]);
+            }
+            else
+            {
+                for(int i = 0; i<gamepanel.NumCol; i++)
+                    gamepanel.CreateTileWithoutRc(row, i, types[i]);
+            }
         }
+
+        public static void CreateTileRow2(this GamePanel gamepanel, int row, (int, int)[] types, bool withRC = false)
+        {
+            // 경계 검사
+            if( types.Length < gamepanel.NumCol)
+                return;
+
+            if(withRC)
+            {
+                for(int i = 0; i<gamepanel.NumCol; i++)
+                gamepanel.CreateTile(row, i, types[i].Item1, (MatchType)types[i].Item2);
+            }
+            else
+                for(int i = 0; i<gamepanel.NumCol; i++)
+                    gamepanel.CreateTileWithoutRc(row, i, types[i].Item1, (MatchType)types[i].Item2);
+        }        
 
         public static void CreateforMatchTileTestCase(this GamePanel gamepanel)
         {
@@ -102,7 +127,16 @@ namespace Match3
             CreateTileRow( gamepanel, 1, new int[]{3,3,4,1,2});
             CreateTileRow( gamepanel, 2, new int[]{3,3,4,3,1});
             CreateTileRow( gamepanel, 3, new int[]{2,5,1,2,5});
-        }        
+        } 
+
+        public static void CreateMatchType_v(this GamePanel gamepanel, bool withRC = false)
+        {
+            var tupleArray = new (int, int)[]{ (3,3), (4,0), (2,0), (1,0), (5,0) };
+            CreateTileRow2( gamepanel, 0, tupleArray, withRC);
+            CreateTileRow( gamepanel, 1, new int[]{3,1,4,1,2}, withRC);
+            CreateTileRow( gamepanel, 2, new int[]{5,3,4,3,1}, withRC);
+            CreateTileRow( gamepanel, 3, new int[]{2,5,1,2,5}, withRC);
+        } 
     }
 
 }

@@ -114,7 +114,7 @@ namespace Match3
             }
         }
 
-        private void CreateTile(int i, int j, int type, MatchType remover = MatchType.Normal)
+        public void CreateTile(int i, int j, int type, MatchType remover = MatchType.Normal)
         {
             var newTile = _factory.Create(type, new Point2D(i, j));//
             tiles[i, j] = newTile;

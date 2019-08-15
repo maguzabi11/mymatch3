@@ -203,13 +203,14 @@ public class Tile
             });
     }
 
-    public void Execute()
+    public void Execute(bool bDelete = true)
     {
         IsDeleted = true;
         if(removeType != MatchType.Normal)
             gp.RemoveChain( row, col, removeType);
         
-        DeleteWithFade();
+        if( bDelete )
+            DeleteWithFade();
     } 
 
     public void DeleteWithFade()

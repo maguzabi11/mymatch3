@@ -314,7 +314,7 @@ namespace Match3
                 var Key = String.Format($"{matchinfo.ToString()}{matchinfo.GetHashCode()}");
                 CountSignal(Key);
                 
-                tile.Execute(); // 현재 Attract와 연동이 문제
+                tile.Execute(bDelete: false); // 현재 Attract와 연동이 문제
                 tile.Attract(matchinfo, dstTile);
                 tiles[pos.row, pos.col] = null; // 
 

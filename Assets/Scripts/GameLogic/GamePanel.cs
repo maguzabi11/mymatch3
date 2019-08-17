@@ -118,8 +118,7 @@ namespace Match3
         {
             var newTile = _factory.Create(type, new Point2D(i, j));//
             tiles[i, j] = newTile;
-            if (_tilebuilder != null)
-                _tilebuilder.BindTileResource(newTile);
+            _tilebuilder?.BindTileResource(newTile);
             tiles[i, j].SetRemoverType(remover);
         }
 
@@ -255,8 +254,7 @@ namespace Match3
             // 검사 속성 리셋
             for (int i = 0; i < numRow; i++)
                 for (int j = 0; j < numCol; j++)
-                    if(tiles[i, j] != null)
-                        tiles[i, j].ResetFound();
+                    tiles[i, j]?.ResetFound();
         }
 
    
@@ -305,22 +303,43 @@ namespace Match3
                 var tile = tiles[pos.row, pos.col];
                 if (tile == null)
                     continue;
-
-                if (matchinfo.creationPos.row == pos.row && matchinfo.creationPos.col == pos.col)
-                    continue;
-
+                
                 var dstTile = tiles[matchinfo.creationPos.row, matchinfo.creationPos.col];
+                if (dstTile.row == pos.row && dstTile.col == pos.col) // 간략화 요
+                    continue;
 
                 var Key = String.Format($"{matchinfo.ToString()}{matchinfo.GetHashCode()}");
                 CountSignal(Key);
                 
                 tile.Execute(bDelete: false); // 현재 Attract와 연동이 문제
                 tile.Attract(matchinfo, dstTile);
-                tiles[pos.row, pos.col] = null; // 
+                tiles[pos.row, pos.col] = null; // 문제 여지 있음
 
                 output.AppendFormat($"[{pos.row},{pos.col}]");
             }
         }
+
+        private void DeleteMatch3Tiles(StringBuilder output, MatchList list)
+        {
+            foreach (Point2D pos in list)
+            {
+                var tile = tiles[pos.row, pos.col];
+                if (tile == null)
+                    continue;
+                
+                output.AppendFormat($"[{pos.row},{pos.col}]");
+
+                // 영향받는 타일들이 중복될 수 있음 고려할 것
+                /*
+                특수타일을 먼저 검사해서 연출할 것인가?
+                하나씩 처리하면서 처리?
+                폭탄 영역이 겹쳐있을 때
+                 */
+                tile.Execute();
+                _nSendDeleteSignal++;
+                tiles[pos.row, pos.col] = null;
+            }
+        }        
 
         // 별도 클래스로 분리 가능성 높음
         private void CountSignal(string Key)
@@ -352,28 +371,6 @@ namespace Match3
         private void RemoveSignal(string Key)
         {
             signalSyncCounter.Remove(Key);
-        }
-
-        private void DeleteMatch3Tiles(StringBuilder output, MatchList list)
-        {
-            foreach (Point2D pos in list)
-            {
-                var tile = tiles[pos.row, pos.col];
-                if (tile == null)
-                    continue;
-                
-                output.AppendFormat($"[{pos.row},{pos.col}]");
-
-                // 영향받는 타일들이 중복될 수 있음 고려할 것
-                /*
-                특수타일을 먼저 검사해서 연출할 것인가?
-                하나씩 처리하면서 처리?
-                폭탄 영역이 겹쳐있을 때
-                 */
-                tile.Execute();
-                _nSendDeleteSignal++;
-                tiles[pos.row, pos.col] = null;
-            }
         }
 
         private void CalculateScore(List<MatchInfo> matches)
@@ -752,7 +749,7 @@ namespace Match3
         // OnFillTileSignal -> OnTileDropSignal
         public void OnFillTileSignal(FillTileSignal signal)
         {
-            //Debug.LogFormat($"nSendDeleteSignal: {_nSendDeleteSignal}");
+            Debug.LogFormat($"OnFillTileSignal() nSendDeleteSignal:{_nSendDeleteSignal}");
             _nSendDeleteSignal--;
             if( _nSendDeleteSignal == 0)
             {
@@ -778,17 +775,14 @@ namespace Match3
         {
             var Key = String.Format($"{signal.matchInfo.ToString()}{signal.matchInfo.GetHashCode()}");
             int cnt = CountDownSignal(Key);
-             if(cnt == 0)
+            if(cnt == 0)
             {
                 Debug.LogFormat("특수 타일 변경(또는 생성)하기");
                 
                 // 타일을 생성하지 않고 속성을 변경하는 것을 처리
                 var tile = tiles[signal.matchInfo.creationPos.row, signal.matchInfo.creationPos.col];
-                tile.SetRemoverType(signal.match);
+                tile?.SetRemoverType(signal.match);
                 
-                // 타일 비주얼도 바꿔야한다. 현재는 관련 그래픽 리소스가 없음
-                //tile.ChangeTile(Sprite sprite);
-
                 RemoveSignal(Key);  // 현재는 재활용이 불가능하여 제거
                 _signalBus.Fire(new FillTileSignal());
             }

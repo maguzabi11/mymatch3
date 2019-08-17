@@ -78,6 +78,7 @@ public class MatchingChecker
     재검토
     - 패턴 데이터 검사
     - 결과는 매치와 매칭의 종류(new)
+    - bug: 22 & match3
      */
     private void FindMatchingTiles(int row, int col, MatchInfo findinfo)
     {
@@ -332,8 +333,12 @@ public class MatchingChecker
         bool isFound = isMatchedPattern(pattern, curtile, matchCandidates);
         if (isFound)
         {
+            findinfo.Reset();
+            findinfo.SetCreationPos(row, col);
+
             findinfo.matchType = MatchType.Butterfly;
             findinfo.isMatch = true;
+            curtile.removeType = MatchType.Butterfly; //
 
             // makeMatch 내의 루프 참조 
             foreach (var tile in matchCandidates)
@@ -346,19 +351,19 @@ public class MatchingChecker
                         continue;
 
                     Debug.LogFormat("교차점[{0},{1}] 발견", tile.row, tile.col);
-                    if (matchedInfo.matchType == MatchType.Normal)
-                    {
-                        // 해당 좌표만 제거
-                        matchedInfo.matchlist.Remove(tile.GetLocation());
-                        bAddPostion = true;
-                    }
+                    // if (matchedInfo.matchType == MatchType.Normal)
+                    // {
+                    //     // 해당 좌표만 제거
+                    //     matchedInfo.matchlist.Remove(tile.GetLocation());
+                    //     bAddPostion = true;
+                    // }
                 }
 
                 if (bAddPostion)
                 {
                     findinfo.AddTilePosition(tile.GetLocation());
                     tile.MarkFound();
-                }                
+                }
             }
 
             AddCreatetionMatchInfo(new MatchInfo(findinfo));

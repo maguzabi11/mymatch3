@@ -137,6 +137,15 @@ namespace Match3
             CreateTileRow( gamepanel, 2, new int[]{5,3,4,3,1}, withRC);
             CreateTileRow( gamepanel, 3, new int[]{2,5,1,2,5}, withRC);
         } 
+
+        // 나비와 줄이 같이 만들어지는 상황
+       public static void Create_bug1(this GamePanel gamepanel, bool withRC)
+        {
+            CreateTileRow( gamepanel, 0, new int[]{3,5,5,1,5}, withRC);
+            CreateTileRow( gamepanel, 1, new int[]{1,3,5,5,2}, withRC);
+            CreateTileRow( gamepanel, 2, new int[]{3,3,4,1,1}, withRC);
+            CreateTileRow( gamepanel, 3, new int[]{2,5,1,2,5}, withRC);
+        }         
     }
 
 }

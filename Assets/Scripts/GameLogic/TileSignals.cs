@@ -17,16 +17,6 @@ public class TileMovementSignal
     }
 }
 
-public class TileDeleteSignal
-{
-    public Tile tile;
-
-    public TileDeleteSignal(Tile tile)
-    {
-        this.tile = tile;
-    }
-}
-
 public class EndTileAttractionSignal
 {
     public MatchInfo matchInfo;

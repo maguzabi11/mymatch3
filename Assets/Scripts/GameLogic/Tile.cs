@@ -187,21 +187,6 @@ public class Tile
         location = tmpLocation;
     }
 
-    // 이런 식으로 사용하면 시그널이 불필요하게 많이 전달이 된다.
-    // 비효율적으로 판단하여 시그널을 사용하지 않기로 결정.
-    public void OnDeleteSignal(TileDeleteSignal signal)
-    {
-        if( this != signal.tile ) {
-            Debug.LogFormat($"this:{this.row}{this.col}, signal:{signal.tile.row}{signal.tile.col}");
-            return;
-        }
-
-        gameTile.GetComponent<SpriteRenderer>().material.DOFade(0f, 1f)
-            .OnComplete( ()=> { 
-                Delete();
-                _signalBus.Fire(new FillTileSignal());
-            });
-    }
 
     public void Execute(bool bDelete = true)
     {

@@ -204,6 +204,12 @@ public class Tile
         if( gameTile == null )
             return;
 
+        // do tween 실행 중인지 확인필요
+        // 이미 트윈 중이면 무시
+        // 아직 처리 안한 부분: 해당 오브젝트의 다른 부분이 처리 중일 수도 있음.
+        if( DOTween.IsTweening(gameTile.GetComponent<SpriteRenderer>().material) )
+            return;
+
         gameTile.GetComponent<SpriteRenderer>().material.DOFade(0f, duration*1.5f)
             .OnComplete( ()=> { 
                 Delete();
@@ -261,13 +267,11 @@ public class Tile
         // 타입마다 처리 방식이 다름
         if( removeType == MatchType.Horizon4 )
         {
-            if( h_remover != null )
-                h_remover.gameObject.SetActive(true);
+            h_remover?.gameObject.SetActive(true);
         }
         else if( removeType == MatchType.Vertical4 )
         {
-            if( v_remover != null )
-                v_remover.gameObject.SetActive(true);
+            v_remover?.gameObject.SetActive(true);
         }
         else
         // MatchType.Bomb && MatchType.Butterfly && MatchType.KindRemover
